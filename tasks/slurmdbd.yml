@@ -1,0 +1,66 @@
+---
+
+- name: install mariadb-server rpm
+  ansible.builtin.yum:
+    name: mariadb-server
+    state: installed
+
+- name: Enable and start mariadb server
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: Install MySQL-python rpm (required by ansible)
+  ansible.builtin.yum:
+    name: MySQL-python
+    state: installed
+
+- name: Create mysql db for accounting
+  community.mysql.mysql_db:
+    name: "{{ slurm_slurmdbd_mysql_db_name }}"
+    state: present
+
+- name: Create mysql account for slurm accounting daemon
+  community.mysql.mysql_user:
+    name: "{{ slurm_slurmdbd_mysql_user }}"
+    password: "{{ slurm_slurmdbd_mysql_password }}"
+    priv: '{{ slurm_slurmdbd_mysql_db_name }}.*:ALL'
+    state: present
+
+- name: Install slurm accounting daemon from OpenHPC (slurm-slurmdbd-ohpc rpm)
+  ansible.builtin.yum:
+    name: slurm-slurmdbd-ohpc
+    state: installed
+
+- name: Deploy slurm accounting config file
+  ansible.builtin.template:
+    dest: /etc/slurm/slurmdbd.conf
+    src: slurmdbd.conf.j2
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart slurmdbd service
+
+- name: Enable and start slurmdbd
+  ansible.builtin.service:
+    name: slurmdbd
+    state: started
+    enabled: true
+  register: _slurmdbd_boot
+
+- name: Wait 15secs to let slurmdbd boot if this is the first time it boots
+  pause:
+    seconds: 15
+  when: _slurmdbd_boot.changed
+
+- name: Check if the cluster is registered in accounting db
+  ansible.builtin.shell: sacctmgr list cluster --noheader --parsable | wc -l
+  register: _sacctmgr_output
+  changed_when: false
+
+# if previous command return 0 lines it's because no cluster is registered
+# We assume that no other clusters are re
+- name: Register the cluster in accounting db
+  command: sacctmgr add cluster {{ slurm_cluster_name }} --immediate
+  when: _sacctmgr_output.stdout == "0"
