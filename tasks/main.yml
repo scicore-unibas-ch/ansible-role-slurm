@@ -125,3 +125,11 @@
 - name: Configure slurm accounting daemon
   ansible.builtin.include_tasks: slurmdbd.yml
   when: "slurm_dbd_host in inventory_hostname"
+
+- name: Configure slurm master daemon
+  ansible.builtin.include_tasks: slurm-master.yml
+  when: "slurm_master_host in inventory_hostname"
+
+- name: Configure slurm workers
+  ansible.builtin.include_tasks: slurm-worker.yml
+  when: "slurm_workers_group in group_names"

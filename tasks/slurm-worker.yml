@@ -1,0 +1,45 @@
+---
+
+- name: Install OpenHPC slurmd
+  ansible.builtin.yum:
+    name:
+      - "slurm-slurmd-ohpc"
+    state: present
+
+- name: Install cgroups if this is a worker host
+  ansible.builtin.yum:
+    name:
+      - libcgroup
+      - libcgroup-tools
+    state: present
+
+- name: deploy /etc/slurm/cgroup.conf
+  ansible.builtin.template:
+    dest: /etc/slurm/cgroup.conf
+    src: cgroup.conf.j2
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart slurm services
+
+- name: Enable and start cgroup services if this is a worker_node
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - cgred
+    - cgconfig
+
+- name: Install slurm worker rpms
+  ansible.builtin.yum:
+    name:
+      - "@ohpc-base-compute"
+      - "@ohpc-slurm-client"
+    state: installed
+
+- name: Start and enable slurm worker daemon
+  ansible.builtin.service:
+    name: slurmd
+    state: started
+    enabled: true

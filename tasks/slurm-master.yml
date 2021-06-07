@@ -1,0 +1,24 @@
+
+---
+
+- name: Install slurm master rpms
+  ansible.builtin.yum:
+    name:
+      - "@ohpc-slurm-server"
+      - "slurm-slurmctld-ohpc"
+      - "slurm-example-configs-ohpc"
+    state: installed
+
+- name: Deploy /etc/slurm/job_submit.lua
+  ansible.builtin.template:
+    dest: /etc/slurm/job_submit.lua
+    src: job_submit.lua.j2
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Start and enable slurm master daemon
+  ansible.builtin.service:
+    name: slurmctld
+    state: started
+    enabled: true
