@@ -1,0 +1,22 @@
+###
+#
+# Slurm cgroup support configuration file
+#
+# See man slurm.conf and man cgroup.conf for further
+# information on cgroup configuration parameters
+#--
+
+# general
+CgroupMountpoint=/sys/fs/cgroup
+CgroupAutomount=yes
+
+# task/cgroup plugin
+TaskAffinity=yes # require hwloc
+ConstrainCores=yes
+ConstrainRAMSpace=yes
+ConstrainSwapSpace=yes
+ConstrainKmemSpace=no
+
+# prevent jobs from using swap space
+AllowedRAMSpace=99  # in %
+AllowedSwapSpace=0   # in %
