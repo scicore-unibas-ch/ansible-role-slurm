@@ -11,14 +11,17 @@
   service:
     name: slurmctld
     state: restarted
+  when: "slurm_master_host in inventory_hostname"
 
 - name: restart slurmd service
   listen: restart slurm services
   service:
     name: slurmd
     state: restarted
+  when: "slurm_workers_group in group_names"
 
 - name: restart slurmdbd service
   service:
     name: slurmdbd
     state: restarted
+  when: "slurm_dbd_host in inventory_hostname"
