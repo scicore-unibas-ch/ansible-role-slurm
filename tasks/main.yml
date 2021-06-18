@@ -51,7 +51,7 @@
     state: present
 
 - name: Ensure the Slurm spool directory exists
-  file:
+  ansible.builtin.file:
     path: /var/spool/slurm
     owner: slurm
     group: slurm
@@ -59,7 +59,7 @@
     state: directory
 
 - name: Ensure the Slurm log directory exists
-  file:
+  ansible.builtin.file:
     path: /var/log/slurm
     owner: slurm
     group: slurm
@@ -67,7 +67,7 @@
     state: directory
 
 - name: Generate a Munge key for the cluster in the slurm-master host
-  command: "dd if=/dev/urandom of=/etc/munge/munge.key bs=1 count=1024"
+  ansible.builtin.command: "dd if=/dev/urandom of=/etc/munge/munge.key bs=1 count=1024"
   args:
     creates: /etc/munge/munge.key
   delegate_to: "{{ slurm_master_host }}"
@@ -82,7 +82,7 @@
   delegate_to: "{{ slurm_master_host }}"
 
 - name: Retrieve Munge key from slurm-master host
-  slurp:
+  ansible.builtin.slurp:
     src: "/etc/munge/munge.key"
   register: _slurm_munge_key
   delegate_to: "{{ slurm_master_host }}"
