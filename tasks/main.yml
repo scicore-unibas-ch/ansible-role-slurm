@@ -79,6 +79,7 @@
   ansible.builtin.yum:
     name: "{{ slurm_ohpc_repos_url['rhel8'] }}"
     state: installed
+    disable_gpg_check: true
   when:
     - slurm_add_openhpc_repos
     - ansible_os_family == "RedHat"
@@ -88,6 +89,15 @@
   ansible.builtin.package:
     name: "{{ slurm_packages_common[ansible_os_family] }}"
     state: present
+
+- name: Create /etc/slurm in RedHat based systems
+  ansible.builtin.file:
+    path: /etc/slurm
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  when: ansible_os_family == "RedHat"
 
 - name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
   file:
