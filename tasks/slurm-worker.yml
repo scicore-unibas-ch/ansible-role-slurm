@@ -1,16 +1,5 @@
 ---
 
-- name: Install OpenHPC slurmd
-  ansible.builtin.yum:
-    name:
-      - "slurm-slurmd-ohpc"
-    state: present
-
-- name: Install vte-profile to avoid error message "bash __vte_prompt_command command not found" on slurm interative shells
-  ansible.builtin.yum:
-    name: vte-profile
-    state: present
-
 - name: Install cgroups if this is a worker host
   ansible.builtin.yum:
     name:
@@ -37,7 +26,7 @@
     - cgred
     - cgconfig
 
-- name: Install slurm worker rpms
+- name: Install slurm worker packages
   ansible.builtin.package:
     name: "{{ slurm_packages_worker[ansible_os_family] }}"
     state: installed
