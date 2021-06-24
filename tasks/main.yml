@@ -59,7 +59,7 @@
         repo: "{{ slurm_config_git_repo }}"
         dest: /etc/slurm/
         version: master
-        force: yes
+        force: true
       notify: restart slurm services
       environment:
         GIT_SSL_NO_VERIFY: "True"
