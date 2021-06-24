@@ -42,7 +42,8 @@
 
   when:
     - slurm_update_etc_hosts_file
-    - not ansible_virtualization_type == "docker"  # we cannot modify /etc/hosts in a docker container
+    - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
+    - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
 
 - name: Install OpenHPC repositories (RHEL7)
   ansible.builtin.yum:
