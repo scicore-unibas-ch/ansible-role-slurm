@@ -1,11 +1,20 @@
 ---
 
-- name: Install cgroups if this is a worker host
+- name: Install cgroups if this is a worker host | RedHat
   ansible.builtin.yum:
     name:
       - libcgroup
       - libcgroup-tools
     state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install cgroups if this is a worker host | Debian
+  ansible.builtin.apt:
+    name:
+      - libcgroup1
+      - cgroup-tools
+    state: present
+  when: ansible_os_family == "Debian"
 
 - name: deploy /etc/slurm/cgroup.conf
   ansible.builtin.template:
