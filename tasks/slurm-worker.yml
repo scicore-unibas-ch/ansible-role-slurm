@@ -32,6 +32,7 @@
     name: "{{ item }}"
     enabled: true
     state: started
+  when: not ansible_virtualization_type == "docker"
   with_items:
     - cgred
     - cgconfig
