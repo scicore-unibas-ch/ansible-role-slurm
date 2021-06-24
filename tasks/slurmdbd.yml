@@ -47,7 +47,11 @@
     - skip_ansible_lint
 
 - name: Check if the cluster is registered in accounting db
-  ansible.builtin.shell: sacctmgr list cluster --noheader --parsable | wc -l
+  ansible.builtin.shell: |
+    set -o pipefail
+    sacctmgr list cluster --noheader --parsable | wc -l
+  args:
+    executable: /bin/bash
   register: _sacctmgr_output
   changed_when: false
 
