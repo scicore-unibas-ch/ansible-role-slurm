@@ -10,7 +10,7 @@
         marker_begin: "BEGIN slurm master host"
         marker_end: "END slurm master host"
         block: |
-          {{ hostvars[slurm_master_host]['ansible_host'] }}  {{ slurm_master_host }}
+          {{ hostvars[slurm_master_host]['ansible_default_ipv4']['address'] }}  {{ slurm_master_host }}
 
     - name: Add slurmdbd to /etc/hosts
       ansible.builtin.blockinfile:
@@ -18,7 +18,7 @@
         marker_begin: "BEGIN slurm dbd host"
         marker_end: "END slurm dbd host"
         block: |
-          {{ hostvars[slurm_dbd_host]['ansible_host'] }}  {{ slurm_dbd_host }}
+          {{ hostvars[slurm_dbd_host]['ansible_default_ipv4']['address'] }}  {{ slurm_dbd_host }}
 
     - name: Add all the worker nodes to /etc/hosts
       ansible.builtin.blockinfile:
@@ -27,7 +27,7 @@
         marker_end: "END slurm workers hosts"
         block: |
           {% for node in groups[slurm_workers_group]  %}
-          {{ hostvars[node]['ansible_host'] }}  {{ node }}
+          {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
     - name: Add all the submit nodes to /etc/hosts
@@ -37,7 +37,7 @@
         marker_end: "END slurm submit hosts"
         block: |
           {% for node in groups[slurm_submit_group]  %}
-          {{ hostvars[node]['ansible_host'] }}  {{ node }}
+          {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
   when: slurm_update_etc_hosts_file
