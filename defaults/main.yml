@@ -52,6 +52,7 @@ slurm_packages_slurmdbd:
 # slurm packages we install only in worker nodes
 slurm_packages_worker:
   RedHat:
+    - slurm-slurmd-ohpc
     - "@ohpc-base-compute"
     - "@ohpc-slurm-client"
     - vte-profile  # avoid error message "bash __vte_prompt_command command not found" on slurm interative shells

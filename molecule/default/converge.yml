@@ -21,13 +21,12 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
-    - ansible.builtin.debug:
-        var: hostvars[inventory_hostname]
+    # - ansible.builtin.debug:
+    #     var: hostvars[inventory_hostname]
 
   vars:
 
     slurm_master_host: "{{ inventory_hostname }}"
-    slurm_update_etc_hosts_file: false
 
   roles:
-    - role: scicore.slurm
+    - role: ansible-role-slurm
