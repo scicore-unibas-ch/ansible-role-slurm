@@ -41,7 +41,7 @@
 - name: Install slurm worker packages
   ansible.builtin.package:
     name: "{{ slurm_packages_worker[ansible_os_family] }}"
-    state: installed
+    state: present
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
