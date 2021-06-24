@@ -40,7 +40,9 @@
           {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
-  when: slurm_update_etc_hosts_file
+  when:
+    - slurm_update_etc_hosts_file
+    - not ansible_virtualization_type == "docker"  # we cannot modify /etc/hosts in a docker container
 
 - name: Install OpenHPC repositories (RHEL7)
   ansible.builtin.yum:

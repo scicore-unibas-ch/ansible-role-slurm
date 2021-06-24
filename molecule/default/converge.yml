@@ -24,7 +24,6 @@
   vars:
 
     slurm_master_host: "{{ inventory_hostname }}"
-    slurm_update_etc_hosts_file: false  # cannot modify /etc/hosts in a container
 
   roles:
     - role: scicore.slurm
