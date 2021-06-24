@@ -1,9 +1,9 @@
 ---
 
-- name: Install slurm accounting daemon and depencencies
+- name: Install slurm accounting daemon and dependencies
   ansible.builtin.package:
     name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
-    state: installed
+    state: present
 
 - name: Enable and start mariadb server
   ansible.builtin.service:

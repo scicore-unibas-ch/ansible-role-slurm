@@ -68,6 +68,15 @@
     name: "{{ slurm_packages_common[ansible_os_family] }}"
     state: present
 
+- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
+  file:
+    src: /etc/slurm-llnl
+    dest: /etc/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Ensure the Slurm spool directory exists
   ansible.builtin.file:
     path: /var/spool/slurm

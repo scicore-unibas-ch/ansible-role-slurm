@@ -1,9 +1,9 @@
 ---
 
-- name: Install slurm master rpms
+- name: Install slurm master packages
   ansible.builtin.package:
     name: "{{ slurm_packages_master[ansible_os_family] }}"
-    state: installed
+    state: present
 
 - name: Deploy /etc/slurm/job_submit.lua
   ansible.builtin.template:
