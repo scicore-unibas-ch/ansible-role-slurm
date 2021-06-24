@@ -21,8 +21,8 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
-    # - ansible.builtin.debug:
-    #     var: hostvars[inventory_hostname]
+  #  - ansible.builtin.debug:
+  #      var: hostvars[inventory_hostname]
 
   vars:
 
