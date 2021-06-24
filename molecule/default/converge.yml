@@ -21,6 +21,9 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
+    - ansible.builtin.debug:
+        var: hostvars[inventory_hostname]
+
   vars:
 
     slurm_master_host: "{{ inventory_hostname }}"
