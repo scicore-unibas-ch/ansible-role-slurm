@@ -16,7 +16,7 @@
     state: present
   when: ansible_os_family == "Debian"
 
-- name: deploy /etc/slurm/cgroup.conf
+- name: Deploy /etc/slurm/cgroup.conf
   ansible.builtin.template:
     dest: /etc/slurm/cgroup.conf
     src: cgroup.conf.j2
