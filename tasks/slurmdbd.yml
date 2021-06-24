@@ -1,8 +1,8 @@
 ---
 
-- name: install mariadb-server rpm
-  ansible.builtin.yum:
-    name: mariadb-server
+- name: Install slurm accounting daemon and depencencies
+  ansible.builtin.package:
+    name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
     state: installed
 
 - name: Enable and start mariadb server
@@ -10,11 +10,6 @@
     name: mariadb
     state: started
     enabled: true
-
-- name: Install MySQL-python rpm (required by ansible)
-  ansible.builtin.yum:
-    name: MySQL-python
-    state: installed
 
 - name: Create mysql db for accounting
   community.mysql.mysql_db:
@@ -27,11 +22,6 @@
     password: "{{ slurm_slurmdbd_mysql_password }}"
     priv: '{{ slurm_slurmdbd_mysql_db_name }}.*:ALL'
     state: present
-
-- name: Install slurm accounting daemon
-  ansible.builtin.package:
-    name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
-    state: installed
 
 - name: Deploy slurm accounting config file
   ansible.builtin.template:

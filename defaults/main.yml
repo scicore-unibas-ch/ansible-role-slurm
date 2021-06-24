@@ -43,6 +43,8 @@ slurm_packages_master:
 # slurm packages we install only in slurmdbd node
 slurm_packages_slurmdbd:
   RedHat:
+    - mariadb-server
+    - MySQL-python
     - slurm-slurmdbd-ohpc
   Debian:
     - slurm
