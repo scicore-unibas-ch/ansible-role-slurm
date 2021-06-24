@@ -63,7 +63,7 @@
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == "8"
 
-- name: Install OpenHPC runtime Slurm packages
+- name: Install common Slurm packages
   ansible.builtin.package:
     name: "{{ slurm_packages_common[ansible_os_family] }}"
     state: present

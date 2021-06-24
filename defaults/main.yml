@@ -29,7 +29,7 @@ slurm_packages_common:
     - munge-ohpc
     - slurm-example-configs-ohpc
   Debian:
-    - slurm
+    - slurm-client
 
 # slurm packages we install only in master node
 slurm_packages_master:
@@ -38,7 +38,7 @@ slurm_packages_master:
     - slurm-slurmctld-ohpc
     - slurm-example-configs-ohpc
   Debian:
-    - slurm
+    - slurmctld
 
 # slurm packages we install only in slurmdbd node
 slurm_packages_slurmdbd:
@@ -47,7 +47,9 @@ slurm_packages_slurmdbd:
     - MySQL-python
     - slurm-slurmdbd-ohpc
   Debian:
-    - slurm
+    - mariadb-server
+    - python3-mysqldb
+    - slurmdbd
 
 # slurm packages we install only in worker nodes
 slurm_packages_worker:
@@ -57,4 +59,4 @@ slurm_packages_worker:
     - "@ohpc-slurm-client"
     - vte-profile  # avoid error message "bash __vte_prompt_command command not found" on slurm interative shells
   Debian:
-    - slurm
+    - slurmd
