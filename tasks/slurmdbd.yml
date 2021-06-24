@@ -28,9 +28,9 @@
     priv: '{{ slurm_slurmdbd_mysql_db_name }}.*:ALL'
     state: present
 
-- name: Install slurm accounting daemon from OpenHPC (slurm-slurmdbd-ohpc rpm)
-  ansible.builtin.yum:
-    name: slurm-slurmdbd-ohpc
+- name: Install slurm accounting daemon
+  ansible.builtin.packages:
+    name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
     state: installed
 
 - name: Deploy slurm accounting config file

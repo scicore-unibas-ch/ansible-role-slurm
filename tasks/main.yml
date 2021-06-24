@@ -43,11 +43,8 @@
   when: slurm_update_etc_hosts_file
 
 - name: Install OpenHPC runtime Slurm packages
-  ansible.builtin.yum:
-    name:
-      - "slurm-ohpc"
-      - "munge-ohpc"
-      - "slurm-example-configs-ohpc"
+  ansible.builtin.package:
+    name: "{{ slurm_packages_common[ansible_os_family] }}"
     state: present
 
 - name: Ensure the Slurm spool directory exists

@@ -13,3 +13,36 @@ slurm_submit_group: slurm_submit_hosts  # group in your ansible inventory includ
 slurm_slurmdbd_mysql_db_name: slurm
 slurm_slurmdbd_mysql_user: slurm
 slurm_slurmdbd_mysql_password: aadAD432saAdfaoiu
+
+# slurm packages we install in every cluster member
+slurm_packages_common:
+  RedHat:
+    - slurm-ohpc
+    - munge-ohpc
+    - slurm-example-configs-ohpc
+  Debian:
+    - slurm
+
+# slurm packages we install only in master node
+slurm_packages_master:
+  RedHat:
+    - "@ohpc-slurm-server"
+    - slurm-slurmctld-ohpc
+    - slurm-example-configs-ohpc
+  Debian:
+    - slurm
+
+# slurm packages we install only in slurmdbd node
+slurm_packages_slurmdbd:
+  RedHat:
+    - slurm-slurmdbd-ohpc
+  Debian:
+    - slurm
+
+# slurm packages we install only in worker nodes
+slurm_packages_worker:
+  RedHat:
+    - "@ohpc-base-compute"
+    - "@ohpc-slurm-client"
+  Debian:
+    - slurm

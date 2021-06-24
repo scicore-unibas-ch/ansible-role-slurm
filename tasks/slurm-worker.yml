@@ -37,10 +37,8 @@
     - cgconfig
 
 - name: Install slurm worker rpms
-  ansible.builtin.yum:
-    name:
-      - "@ohpc-base-compute"
-      - "@ohpc-slurm-client"
+  ansible.builtin.package:
+    name: "{{ slurm_packages_worker[ansible_os_family] }}"
     state: installed
 
 - name: Start and enable slurm worker daemon
