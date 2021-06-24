@@ -43,6 +43,8 @@
   ansible.builtin.pause:
     seconds: 15
   when: _slurmdbd_boot.changed
+  tags:
+    - skip_ansible_lint
 
 - name: Check if the cluster is registered in accounting db
   ansible.builtin.shell: sacctmgr list cluster --noheader --parsable | wc -l
