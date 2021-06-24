@@ -3,6 +3,8 @@
 
 slurm_update_etc_hosts_file: true  # add all the slurm hosts to /etc/hosts in every machine
 
+slurm_cluster_name: slurm-cluster
+
 slurm_master_host: slurm-master.cluster.com  # set this var to the ansible_hostname of the slurm-master
 slurm_dbd_host: "{{ slurm_master_host }}"  # set this var to the ansible_hostname of the slurm-dbd host (slurm-master by default)
 
@@ -13,6 +15,8 @@ slurm_submit_group: slurm_submit_hosts  # group in your ansible inventory includ
 slurm_slurmdbd_mysql_db_name: slurm
 slurm_slurmdbd_mysql_user: slurm
 slurm_slurmdbd_mysql_password: aadAD432saAdfaoiu
+
+slurm_add_openhpc_repos: true
 
 # slurm packages we install in every cluster member
 slurm_packages_common:
