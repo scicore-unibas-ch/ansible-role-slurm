@@ -22,6 +22,7 @@
     password: "{{ slurm_slurmdbd_mysql_password }}"
     priv: '{{ slurm_slurmdbd_mysql_db_name }}.*:ALL'
     state: present
+  no_log: true
 
 - name: Deploy slurm accounting config file
   ansible.builtin.template:
