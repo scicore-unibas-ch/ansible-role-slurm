@@ -120,6 +120,7 @@
     creates: /etc/munge/munge.key
   delegate_to: "{{ slurm_master_host }}"
   notify: restart munge service
+  no_log: true
 
 - name: Set permissions for /etc/munge/munge.key in master
   ansible.builtin.file:
@@ -134,6 +135,7 @@
     src: "/etc/munge/munge.key"
   register: _slurm_munge_key
   delegate_to: "{{ slurm_master_host }}"
+  no_log: true
 
 - name: Write Munge key to submit hosts
   ansible.builtin.copy:
@@ -144,6 +146,7 @@
     mode: 0400
   when: "slurm_submit_group in group_names"
   notify: restart munge service
+  no_log: true
 
 - name: Write Munge key to compute nodes
   ansible.builtin.copy:
@@ -154,6 +157,7 @@
     mode: 0400
   when: "slurm_workers_group in group_names"
   notify: restart munge service
+  no_log: true
 
 - name: Start and enable munge service
   ansible.builtin.service:
