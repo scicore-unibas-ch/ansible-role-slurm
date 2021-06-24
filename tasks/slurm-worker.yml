@@ -23,6 +23,7 @@
     owner: root
     group: root
     mode: 0644
+  when: not slurm_config_git_repo is defined
   notify: restart slurm services
 
 - name: Enable and start cgroup services if this is a worker_node

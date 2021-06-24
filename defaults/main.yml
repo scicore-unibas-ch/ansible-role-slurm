@@ -3,6 +3,8 @@
 
 slurm_update_etc_hosts_file: true  # add all the slurm hosts to /etc/hosts in every machine
 
+# slurm_config_git_repo: ""  # point this var to a git repo if you have your slurm config in git
+
 slurm_cluster_name: slurm-cluster
 
 slurm_master_host: slurm-master.cluster.com   # set this var to the ansible_hostname of the slurm-master

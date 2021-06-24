@@ -12,6 +12,7 @@
     owner: root
     group: root
     mode: 0755
+  when: not slurm_config_git_repo is defined
 
 - name: Start and enable slurm master daemon
   ansible.builtin.service:
