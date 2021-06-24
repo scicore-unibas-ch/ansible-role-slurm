@@ -1,7 +1,11 @@
-Role Name
+|CI tests|galaxy releases|
+|--------|---------------|
+|[![CI tests](https://github.com/scicore-unibas-ch/ansible-role-slurm/workflows/CI/badge.svg)](https://github.com/scicore-unibas-ch/ansible-role-slurm/actions)|[![galaxy releases](https://img.shields.io/github/release/scicore-unibas-ch/ansible-role-slurm.svg)](https://galaxy.ansible.com/scicore/slurm/releases/)|
+
+scicore.slurm
 =========
 
-Configure a SLURM cluster in a tenant
+Configure a SLURM cluster
 
 This role will configure:
   * slurm accounting daemon
