@@ -21,13 +21,8 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
-    - debug:
-        var: slurm_master_host
-
   vars:
 
-    # slurm_master_host: "{{ lookup('env', 'MOLECULE_DISTRO:-centos7') }}"
-    #slurm_master_host: "centos7"
     slurm_master_host: "{{ inventory_hostname }}"
     slurm_update_etc_hosts_file: false  # cannot modify /etc/hosts in a container
 
