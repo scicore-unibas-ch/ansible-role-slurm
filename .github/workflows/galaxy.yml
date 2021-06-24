@@ -5,8 +5,12 @@ on:
     types:
       - published
 
-jobs:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
+jobs:
   release:
     needs:
       - lint

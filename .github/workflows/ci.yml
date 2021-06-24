@@ -1,11 +1,15 @@
 ---
 
 name: CI
-'on':
+
+on:
   pull_request:
   push:
     branches:
       - master
+  release:
+    types:
+      - published
   schedule:
     - cron: "0 7 * * 0"
 
