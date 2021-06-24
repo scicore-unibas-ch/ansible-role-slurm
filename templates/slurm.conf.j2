@@ -15,9 +15,9 @@ SelectType=select/cons_res
 SelectTypeParameters=CR_LLN,CR_Core_Memory
 FastSchedule=1
 
-#Jobsubmit plugin that sets all the partitions for a job
+{% if slurm_config_deploy_lua_submit_plugin %}
 JobSubmitPlugins=lua
-#JobSubmitPlugins=all_partitions,lua
+{% endif %}
 
 # use the "multifactor" plugin with weights set up to be multi-user ready
 PriorityType=priority/multifactor
