@@ -26,8 +26,8 @@
 
 - name: Deploy slurm accounting config file
   ansible.builtin.template:
+    src: "{{ slurmdbd_conf_custom_template | default('slurmdbd.conf.j2') }}"
     dest: /etc/slurm/slurmdbd.conf
-    src: slurmdbd.conf.j2
     owner: root
     group: root
     mode: 0644

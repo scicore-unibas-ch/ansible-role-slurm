@@ -167,7 +167,7 @@
 
 - name: Deploy /etc/slurm/slurm.conf
   ansible.builtin.template:
-    src: slurm.conf.j2
+    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
     owner: root
     group: root
