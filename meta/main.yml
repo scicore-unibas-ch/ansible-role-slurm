@@ -5,6 +5,7 @@ galaxy_info:
   company: sciCORE
   role_name: slurm
   namespace: scicore
+  description: Install and configure a Slurm cluster
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
@@ -17,7 +18,7 @@ galaxy_info:
   # - GPL-3.0-only
   # - Apache-2.0
   # - CC-BY-4.0
-  license: license (GPL-2.0-or-later, MIT, etc)
+  license: GPL-2.0-or-later
 
   min_ansible_version: 2.9
 
