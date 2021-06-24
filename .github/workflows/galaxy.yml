@@ -6,15 +6,12 @@ on:
       - published
 
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI tests"]
     types:
       - completed
 
 jobs:
   release:
-    needs:
-      - lint
-      - molecule
     runs-on: ubuntu-latest
     steps:
       - name: galaxy
