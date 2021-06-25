@@ -66,6 +66,14 @@
 
   when: slurm_config_git_repo is defined
 
+- name: Install EPEL repository
+  ansible.builtin.yum:
+    name: epel-release
+    state: installed
+  when:
+    - slurm_add_epel_repo
+    - ansible_os_family == "RedHat"
+
 - name: Install OpenHPC repositories (RHEL7)
   ansible.builtin.yum:
     name: "{{ slurm_ohpc_repos_url['rhel7'] }}"
