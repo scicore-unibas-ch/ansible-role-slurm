@@ -1,24 +1,43 @@
 ---
 # defaults file for ansible-role-slurm
 
-slurm_update_etc_hosts_file: true  # add all the slurm hosts to /etc/hosts in every machine
+# add all the slurm hosts to /etc/hosts in every machine
+# ips come from ansible facts hostvars[ansible_hostname]['ansible_default_ipv4']['address']
+slurm_update_etc_hosts_file: true
 
-# slurm_config_git_repo: ""  # point this var to a git repo if you have your slurm config in git
+# point this var to a git repo if you have your slurm config in git
+# slurm_config_git_repo: ""
+
+# by default the role will deploy a lua submit plugin which will automatically add the users to the slurm accounting db
+# Check "templates/job_submit.lua.j2" for details
 slurm_config_deploy_lua_submit_plugin: true
 
+# slurm cluster name as defined in slurm.cfg
 slurm_cluster_name: slurm-cluster
 
-slurm_master_host: slurm-master.cluster.com   # set this var to the ansible_hostname of the slurm-master
-slurm_dbd_host: "{{ slurm_master_host }}"     # set this var to the ansible_hostname of the slurm-dbd host (slurm-master by default)
+# set this var to the ansible_hostname of the slurm-master
+slurm_master_host: slurm-master.cluster.com
+# set this var to the ansible_hostname of the slurm-dbd host (same as slurm-master by default)
+slurm_dbd_host: "{{ slurm_master_host }}"
 
-slurm_workers_group: slurm_workers            # group in your ansible inventory including all the slurm workers
+# group in your ansible inventory including all the slurm workers
+slurm_workers_group: slurm_workers
 
-slurm_submit_group: slurm_submit_hosts        # group in your ansible inventory including all the submit hosts
+# group in your ansible inventory including all the submit hosts
+slurm_submit_group: slurm_submit_hosts
 
+# this is the setting "StateSaveLocation" in slurm.conf
+slurm_slurmctld_spool_path: /var/spool/slurmctld
+
+# this is the setting "SlurmdSpoolDir" in slurm.conf
+slurm_slurmd_spool_path: /var/spool/slurmd
+
+# settings for the slurm accounting daemon
 slurm_slurmdbd_mysql_db_name: slurm
 slurm_slurmdbd_mysql_user: slurm
 slurm_slurmdbd_mysql_password: aadAD432saAdfaoiu
 
+# slurm user and group which runs the slurm daemons
 slurm_user:
   RedHat: "root"
   Debian: "slurm"
@@ -27,8 +46,11 @@ slurm_group:
   RedHat: "root"
   Debian: "slurm"
 
+# EPEL is required to install slurm packages on centos and some dependencies
 slurm_add_epel_repo: true
 
+# You can set this to true to enable the openhpc yum repos on centos
+# If you plan to use packages from openhpc you should also update the list of packages for RedHat below
 slurm_add_openhpc_repo: false
 slurm_ohpc_repos_url:
   rhel7: "https://github.com/openhpc/ohpc/releases/download/v1.3.GA/ohpc-release-1.3-1.el7.x86_64.rpm"

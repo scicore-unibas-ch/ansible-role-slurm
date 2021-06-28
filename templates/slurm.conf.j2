@@ -162,7 +162,7 @@ SlurmctldPidFile=/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmctldTimeout=300
 
-StateSaveLocation={{ slurmctld_spool_path | default('/var/spool/slurmctld') }}
+StateSaveLocation={{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}
 
 #SlurmctldDebug=info
 SlurmctldDebug=error
@@ -181,7 +181,7 @@ SlurmdPidFile=/var/run/slurmd.pid
 {% if ansible_os_family == "Debian" %}
 SlurmdPidFile=/run/slurmd.pid
 {% endif %}
-SlurmdSpoolDir={{ slurmd_spool_path | default('/var/spool/slurm') }}
+SlurmdSpoolDir={{ slurm_slurmd_spool_path | default('/var/spool/slurm') }}
 SlurmdTimeout=300
 
 SlurmdDebug=verbose
