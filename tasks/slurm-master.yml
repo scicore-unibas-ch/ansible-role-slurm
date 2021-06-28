@@ -7,7 +7,7 @@
 
 - name: Ensure the slurmctld spool directory exists
   ansible.builtin.file:
-    path: "{{ slurmctld_spool_path | default('/var/spool/slurmctld') }}"
+    path: "{{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}"
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
