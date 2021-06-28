@@ -55,7 +55,7 @@
         state: present
 
     - name: Deploy slurm config file from a git repo
-      git:
+      ansible.builtin.git:
         repo: "{{ slurm_config_git_repo }}"
         dest: /etc/slurm/
         version: master
@@ -156,7 +156,7 @@
   when: ansible_os_family == "RedHat"
 
 - name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  file:
+  ansible.builtin.file:
     src: /etc/slurm-llnl
     dest: /etc/slurm
     owner: root

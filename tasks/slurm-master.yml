@@ -14,7 +14,7 @@
     state: directory
 
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
-  file:
+  ansible.builtin.file:
     src: /var/log/slurm-llnl
     dest: /var/log/slurm
     owner: root
