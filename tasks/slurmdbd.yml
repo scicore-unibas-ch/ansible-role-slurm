@@ -39,7 +39,7 @@
     dest: /etc/slurm/slurmdbd.conf
     owner: root
     group: root
-    mode: 0644
+    mode: 0600
   when: not slurm_config_git_repo is defined
   notify: restart slurmdbd service
 
