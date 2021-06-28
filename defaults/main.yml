@@ -54,13 +54,11 @@ slurm_packages_master:
 # slurm packages we install only in slurmdbd node
 slurm_packages_slurmdbd:
   RedHat:
-    - mariadb-server
-    - MySQL-python
     - slurm-slurmdbd
-  Debian:
     - mariadb-server
-    - python3-mysqldb
+  Debian:
     - slurmdbd
+    - mariadb-server
 
 # slurm packages we install only in worker nodes
 slurm_packages_worker:
