@@ -43,9 +43,9 @@
     name: "{{ slurm_packages_worker[ansible_os_family] }}"
     state: present
 
-- name: Ensure the Slurm spool directory exists
+- name: Ensure the slurmd spool directory exists
   ansible.builtin.file:
-    path: /var/spool/slurm
+    path: "{{ slurmd_spool_path | default('/var/spool/slurmd') }}"
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
