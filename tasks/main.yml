@@ -124,13 +124,14 @@
     mode: 0755
     state: directory
 
-- name: Ensure the Slurm log directory exists
-  ansible.builtin.file:
-    path: /var/log/slurm
-    owner: slurm
-    group: slurm
-    mode: 0755
-    state: directory
+# - name: Ensure the Slurm log directory exists
+#   ansible.builtin.file:
+#     path: /var/log/slurm
+#     owner: "{{ slurm_user[ansible_os_family] }}"
+#     group: "{{ slurm_group[ansible_os_family] }}"
+#     mode: 0755
+#     state: directory
+#   when: ansible_os_family == "RedHat"
 
 - name: Generate a Munge key for the cluster in the slurm-master host
   ansible.builtin.command: "dd if=/dev/urandom of=/etc/munge/munge.key bs=1 count=1024"
