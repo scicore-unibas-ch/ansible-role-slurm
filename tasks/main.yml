@@ -164,17 +164,6 @@
     state: link
   when: ansible_os_family == "Debian"
 
-- name: Ensure the Slurm spool directory exists
-  ansible.builtin.file:
-    path: /var/spool/slurm
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
-    mode: 0755
-    state: directory
-  when: ("slurm_master_host in inventory_hostname") or
-        ("slurm_dbd_host in inventory_hostname") or
-        ("slurm_workers_group in group_names")
-
 - name: Deploy /etc/slurm/slurm.conf
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
