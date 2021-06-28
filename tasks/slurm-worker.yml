@@ -43,6 +43,15 @@
     name: "{{ slurm_packages_worker[ansible_os_family] }}"
     state: present
 
+- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
+  file:
+    src: /var/log/slurm-llnl
+    dest: /var/log/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
     name: slurmd

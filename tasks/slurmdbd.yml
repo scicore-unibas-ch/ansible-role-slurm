@@ -5,6 +5,15 @@
     name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
     state: present
 
+- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
+  file:
+    src: /var/log/slurm-llnl
+    dest: /var/log/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Enable and start mariadb server
   ansible.builtin.service:
     name: mariadb

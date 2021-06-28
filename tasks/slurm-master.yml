@@ -5,6 +5,15 @@
     name: "{{ slurm_packages_master[ansible_os_family] }}"
     state: present
 
+- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
+  file:
+    src: /var/log/slurm-llnl
+    dest: /var/log/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Deploy /etc/slurm/job_submit.lua
   ansible.builtin.template:
     src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
