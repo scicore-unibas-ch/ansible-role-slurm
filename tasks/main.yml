@@ -125,26 +125,16 @@
   no_log: true
   tags: munge
 
-- name: Write Munge key to submit hosts
+- name: Write Munge key to every host in the cluster
   ansible.builtin.copy:
     content: "{{ _slurm_munge_key.content | b64decode }}"
     dest: "/etc/munge/munge.key"
     owner: munge
     group: munge
     mode: 0400
-  when: "slurm_submit_group in group_names"
-  notify: restart munge service
-  no_log: true
-  tags: munge
-
-- name: Write Munge key to compute nodes
-  ansible.builtin.copy:
-    content: "{{ _slurm_munge_key.content | b64decode }}"
-    dest: "/etc/munge/munge.key"
-    owner: munge
-    group: munge
-    mode: 0400
-  when: "slurm_workers_group in group_names"
+  when: ("slurm_dbd_host in inventory_hostname") or
+        ("slurm_workers_group in group_names") or
+        ("slurm_submit_group in group_names")
   notify: restart munge service
   no_log: true
   tags: munge
