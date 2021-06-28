@@ -85,6 +85,7 @@ jobs:
   release:
     name: Release to galaxy
     needs:
+      - lint
       - molecule
     runs-on: ubuntu-latest
     steps:
