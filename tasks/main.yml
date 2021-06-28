@@ -119,8 +119,8 @@
 - name: Ensure the Slurm spool directory exists
   ansible.builtin.file:
     path: /var/spool/slurm
-    owner: slurm
-    group: slurm
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
     state: directory
 

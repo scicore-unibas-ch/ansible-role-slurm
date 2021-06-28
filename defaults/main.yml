@@ -19,6 +19,14 @@ slurm_slurmdbd_mysql_db_name: slurm
 slurm_slurmdbd_mysql_user: slurm
 slurm_slurmdbd_mysql_password: aadAD432saAdfaoiu
 
+slurm_user:
+  RedHat: "root"
+  Debian: "slurm"
+
+slurm_group:
+  RedHat: "root"
+  Debian: "slurm"
+
 slurm_add_epel_repo: true
 
 slurm_add_openhpc_repo: false
