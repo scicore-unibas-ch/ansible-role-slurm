@@ -118,7 +118,7 @@ PropagateResourceLimits=NONE
 ReturnToService=0
 
 #TaskPlugin=task/none
-TaskPlugin=task/cgroup
+TaskPlugin=task/affinity,task/cgroup  # as recommended in https://slurm.schedmd.com/cgroup.conf.html
 #Prolog=/etc/slurm/scripts/prolog.sh
 #TaskProlog=/etc/slurm/scripts/task_prolog.sh
 #Epilog=/etc/slurm/scripts/epilog.sh

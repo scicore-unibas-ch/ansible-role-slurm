@@ -11,7 +11,7 @@ CgroupMountpoint=/sys/fs/cgroup
 CgroupAutomount=yes
 
 # task/cgroup plugin
-TaskAffinity=yes # require hwloc
+TaskAffinity=no  # as recommended in https://slurm.schedmd.com/cgroup.conf.html
 ConstrainCores=yes
 ConstrainRAMSpace=yes
 ConstrainSwapSpace=yes
