@@ -164,8 +164,7 @@ SlurmctldTimeout=300
 
 StateSaveLocation={{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}
 
-#SlurmctldDebug=info
-SlurmctldDebug=error
+SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
 
@@ -184,7 +183,7 @@ SlurmdPidFile=/run/slurmd.pid
 SlurmdSpoolDir={{ slurm_slurmd_spool_path | default('/var/spool/slurm') }}
 SlurmdTimeout=300
 
-SlurmdDebug=verbose
+SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
 
 AuthType=auth/munge
