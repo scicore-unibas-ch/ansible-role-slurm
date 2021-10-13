@@ -32,6 +32,15 @@
     state: link
   when: ansible_os_family == "Debian"
 
+- name: Deploy /etc/slurm/slurm.conf
+  ansible.builtin.template:
+    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
+    dest: /etc/slurm/slurm.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart slurm services
+
 - name: Enable and start mariadb server
   ansible.builtin.service:
     name: mariadb
