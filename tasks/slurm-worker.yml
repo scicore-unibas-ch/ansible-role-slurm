@@ -82,7 +82,7 @@
     mode: 0644
   when:
     - ansible_os_family == "RedHat"
-    - slurm-configless
+    - slurm_configless
   notify: restart slurm services
 
 - name: Deploy the required configuration for slurm configless | Debian/Ubuntu
@@ -94,7 +94,7 @@
     mode: 0644
   when:
     - ansible_os_family == "Debian"
-    - slurm-configless
+    - slurm_configless
   notify: restart slurm services
 
 - name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless
@@ -104,7 +104,7 @@
   loop:
     - /etc/slurm
     - /etc/slurm-llnl
-  when: slurm-configless
+  when: slurm_configless
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
