@@ -14,7 +14,6 @@
     state: directory
   when:
     - ansible_os_family == "RedHat"
-    - not slurm_config_git_repo is defined
     - not slurm_configless
 
 - name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
@@ -26,7 +25,6 @@
     state: link
   when:
     - ansible_os_family == "Debian"
-    - not slurm_config_git_repo is defined
     - not slurm_configless
 
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems

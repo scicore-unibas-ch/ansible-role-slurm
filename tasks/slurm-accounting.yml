@@ -12,9 +12,7 @@
     group: root
     mode: 0755
     state: directory
-  when:
-    - ansible_os_family == "RedHat"
-    - not slurm_config_git_repo is defined
+  when: ansible_os_family == "RedHat"
 
 - name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
   ansible.builtin.file:
