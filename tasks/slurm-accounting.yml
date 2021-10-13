@@ -14,6 +14,15 @@
     state: directory
   when: ansible_os_family == "RedHat"
 
+- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
+  ansible.builtin.file:
+    src: /etc/slurm-llnl
+    dest: /etc/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
   ansible.builtin.file:
     src: /var/log/slurm-llnl
