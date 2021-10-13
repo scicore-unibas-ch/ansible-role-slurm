@@ -73,20 +73,38 @@
     mode: 0755
     state: directory
 
-- name: Deploy the required configuration for slurm configless
+- name: Deploy the required configuration for slurm configless | RedHat
   ansible.builtin.template:
     src: slurm_worker_configless.j2
     dest: /etc/sysconfig/slurmd
     owner: root
     group: root
     mode: 0644
-  when: slurm_configless
+  when:
+    - ansible_os_family == "RedHat"
+    - slurm-configless
   notify: restart slurm services
 
-- name: Delete /etc/slurm when using slurm configless
+- name: Deploy the required configuration for slurm configless | Debian/Ubuntu
+  ansible.builtin.template:
+    src: slurm_worker_configless.j2
+    dest: /etc/default/slurmd
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ansible_os_family == "Debian"
+    - slurm-configless
+  notify: restart slurm services
+
+- name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless
   ansible.builtin.file:
-    path: /etc/slurm/
+    path: "{{ item }}"
     state: absent
+  loop:
+    - /etc/slurm
+    - /etc/slurm-llnl
+  when: slurm-configless
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:

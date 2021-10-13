@@ -13,7 +13,8 @@ slurm_update_etc_hosts_file: true
 slurm_config_deploy_lua_submit_plugin: true
 
 # Use slurm configless https://slurm.schedmd.com/configless_slurm.html
-# This is only tested on RedHat systems
+# This feature requires slurm 20.02 or higher
+# Only tested on RedHat system but it should work on Ubuntu too
 slurm_configless: false
 
 # slurm cluster name as defined in slurm.cfg
