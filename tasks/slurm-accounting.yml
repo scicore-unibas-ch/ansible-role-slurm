@@ -5,6 +5,15 @@
     name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
     state: present
 
+- name: Create /etc/slurm in RedHat based systems
+  ansible.builtin.file:
+    path: /etc/slurm
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  when: ansible_os_family == "RedHat"
+
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
   ansible.builtin.file:
     src: /var/log/slurm-llnl
