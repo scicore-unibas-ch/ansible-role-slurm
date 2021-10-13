@@ -157,3 +157,7 @@
 - name: Configure slurm workers
   ansible.builtin.include_tasks: slurm-worker.yml
   when: "slurm_workers_group in group_names"
+
+- name: Configure slurm submit hosts
+  ansible.builtin.include_tasks: slurm-submit.yml
+  when: "slurm_submit_group in group_names"
