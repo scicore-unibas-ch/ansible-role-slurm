@@ -12,6 +12,11 @@ slurm_update_etc_hosts_file: true
 # Check "templates/job_submit.lua.j2" for details
 slurm_config_deploy_lua_submit_plugin: true
 
+# Use slurm configless https://slurm.schedmd.com/configless_slurm.html
+# This feature requires slurm 20.02 or higher
+# Only tested on RedHat systems but it should work on Ubuntu too if you install ubuntu20.02 or higher
+slurm_configless: false
+
 # slurm cluster name as defined in slurm.cfg
 slurm_cluster_name: slurm-cluster
 

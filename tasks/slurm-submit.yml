@@ -1,10 +1,5 @@
 ---
 
-- name: Install slurm master packages
-  ansible.builtin.package:
-    name: "{{ slurm_packages_master[ansible_os_family] }}"
-    state: present
-
 - name: Create /etc/slurm in RedHat based systems
   ansible.builtin.file:
     path: /etc/slurm
@@ -32,14 +27,6 @@
     state: link
   when: ansible_os_family == "Debian"
 
-- name: Ensure the slurmctld spool directory exists
-  ansible.builtin.file:
-    path: "{{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}"
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
-    mode: 0755
-    state: directory
-
 - name: Deploy /etc/slurm/slurm.conf
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
@@ -47,21 +34,5 @@
     owner: root
     group: root
     mode: 0644
+  when: not slurm_config_git_repo is defined
   notify: restart slurm services
-
-- name: Deploy /etc/slurm/job_submit.lua
-  ansible.builtin.template:
-    src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
-    dest: /etc/slurm/job_submit.lua
-    owner: root
-    group: root
-    mode: 0755
-  when:
-    - slurm_config_deploy_lua_submit_plugin
-    - not slurm_config_git_repo is defined
-
-- name: Start and enable slurm master daemon
-  ansible.builtin.service:
-    name: slurmctld
-    state: started
-    enabled: true
