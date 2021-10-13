@@ -36,8 +36,8 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0644
   when: not slurm_config_git_repo is defined
   notify: restart slurm services
@@ -87,8 +87,8 @@
   ansible.builtin.template:
     src: "{{ slurmdbd_conf_custom_template | default('slurmdbd.conf.j2') }}"
     dest: /etc/slurm/slurmdbd.conf
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0600
   when: not slurm_config_git_repo is defined
   notify: restart slurmdbd service

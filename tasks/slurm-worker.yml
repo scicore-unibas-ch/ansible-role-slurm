@@ -56,8 +56,8 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
     dest: /etc/slurm/cgroup.conf
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0644
   when:
     - not slurm_config_git_repo is defined

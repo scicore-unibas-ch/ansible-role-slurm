@@ -44,8 +44,8 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0644
   notify: restart slurm services
 
@@ -53,8 +53,8 @@
   ansible.builtin.template:
     src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
     dest: /etc/slurm/job_submit.lua
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
   when:
     - slurm_config_deploy_lua_submit_plugin
