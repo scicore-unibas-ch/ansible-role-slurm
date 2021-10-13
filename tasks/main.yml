@@ -160,4 +160,6 @@
 
 - name: Configure slurm submit hosts
   ansible.builtin.include_tasks: slurm-submit.yml
-  when: "slurm_submit_group in group_names"
+  when:
+    - "slurm_submit_group in group_names"
+    - "not slurm_workers_group in group_names"
