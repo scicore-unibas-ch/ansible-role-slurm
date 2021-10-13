@@ -12,7 +12,7 @@
     owner: root
     group: root
     state: link
-	when: ansible_os_family == "Debian"
+  when: ansible_os_family == "Debian"
 
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
   ansible.builtin.file:
