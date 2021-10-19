@@ -70,8 +70,11 @@ def main():
     logger.info(f"Slurmctld invoked resume node {hostlist_expr}")
     new_nodes = expand_nodes(hostlist_expr)
 
-    conn = openstack.connection.from_config()
-    logger.info(f"Got openstack connection {conn}")
+    try:
+        conn = openstack.connection.from_config()
+        logger.info(f"Got openstack connection {conn}")
+    except Exception as e:
+        logger.error(f"Error connecting to OpenStack API: {e}")
 
     features = get_features(hostlist_expr)
     logger.info(f"Features defined in slurm.conf for node {hostlist_expr}: {list(features.values())[0]}")
@@ -155,15 +158,21 @@ def create_server(conn, name, image, flavor, network, keypair, security_groups):
         Returns a server object and an ip
     """
 
-    server = conn.compute.create_server(
-        name=name, image_id=image.id, flavor_id=flavor.id,
-        networks=[{"uuid": network.id}], key_name=keypair.name, security_groups=[{"name": security_groups[0]}],
-    )
+    try:
+        server = conn.compute.create_server(
+            name=name, image_id=image.id, flavor_id=flavor.id,
+            networks=[{"uuid": network.id}], key_name=keypair.name, security_groups=[{"name": security_groups[0]}],
+        )
+    except Exception as e:
+        logger.error(f"Error booting VM: {e}")
 
     # add extra security groups to the server
     if len(security_groups) > 1:
         for i in range(1,len(security_groups)):
-            conn.add_server_security_groups(server, security_groups[i])
+            try:
+                conn.add_server_security_groups(server, security_groups[i])
+            except Exception as e:
+                logger.error(f"Error adding security group: {e}")
 
     # we don't need to wait of the server if we use "SlurmctldParameters=cloud_reg_addrs" in slurm.conf
     #server = conn.compute.wait_for_server(server) # wait for node to boot so it gets an IP

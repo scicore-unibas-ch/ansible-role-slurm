@@ -51,8 +51,11 @@ def main():
     logger.info(f"Slurmctld invoked suspend node {hostlist_expr}")
     remove_nodes = expand_nodes(hostlist_expr)
 
-    conn = openstack.connection.from_config()
-    logger.info(f"Got openstack connection {conn}")
+    try:
+        conn = openstack.connection.from_config()
+        logger.info(f"Got openstack connection {conn}")
+    except Exception as e:
+        logger.error(f"Error connecting to OpenStack API: {e}")
 
     for node in remove_nodes:
         instance_id = False
@@ -88,8 +91,11 @@ def expand_nodes(hostlist_expr):
     return scontrol.stdout.strip().split('\n')
 
 def delete_server(conn, name):
-    server = conn.compute.find_server(name)
-    conn.compute.delete_server(server)
+    try:
+        server = conn.compute.find_server(name)
+        conn.compute.delete_server(server)
+    except Exception as e:
+        logger.error(f"Error deleting server: {e}")
 
 if __name__ == '__main__':
     main()
