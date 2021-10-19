@@ -1,4 +1,4 @@
-#!/opt/venv_slurm/bin/python3
+#!{{ slurm_openstack_venv_path }}/bin/python3
 # -*- coding: utf-8 -*-
 
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -24,6 +24,8 @@
 
     If a file with the nodename exists in the Slurm control daemons spool directory [2] then the OpenStack ID is read from it and used to select the instance to delete.
     Otherwise, this will attempt to delete the instance by name which requires that the name is unique.
+    
+    OpenStack credentials must be available to this script (e.g. via an application credential in /etc/openstack/clouds.yaml readable by the slurm user)
 
     Output and exceptions are written to the syslog.
 
