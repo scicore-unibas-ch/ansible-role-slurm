@@ -14,5 +14,5 @@ clouds:
       application_credential_secret: "{{ slurm_openstack_application_credential_secret }}"
     region_name: "{{ slurm_openstack_region_name | default('RegionOne') }}"
     interface: "{{ slurm_openstack_interface | default('public') }}"
-    identity_api_version: {{ slurm_openstack_identity_api_version | default('3')}}
-    auth_type: "{{ slurm_openstack_auth_type | default('v3applicationcredential')"
+    identity_api_version: {{ slurm_openstack_identity_api_version | default('3') }}
+    auth_type: "{{ slurm_openstack_auth_type | default('v3applicationcredential') }}"
