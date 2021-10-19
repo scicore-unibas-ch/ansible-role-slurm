@@ -54,6 +54,7 @@
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
+  notify: restart slurmctld service
 
 - name: Deploy /etc/slurm/slurm_suspend_openstack.py
   ansible.builtin.template:
@@ -62,6 +63,7 @@
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
+  notify: restart slurmctld service
 
 - name: Create folder /etc/openstack/ to deploy /etc/openstack/clouds.yaml
   ansible.builtin.file:
@@ -78,3 +80,11 @@
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0700
+
+# This requires a working /etc/openstack/clouds.yaml deployed in previous task
+# This keypair name is later used as a "feature" for the compute nodes in slurm.conf
+# - name: Register ssh public key in the openstack api
+#   openstack.cloud.keypair:
+#     name: "{{ slurm_openstack_ssh_keypair_name }}"
+#     public_key: "{{ slurm_openstack_ssh_public_key }}"
+#     state: present
