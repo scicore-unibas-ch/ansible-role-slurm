@@ -60,6 +60,10 @@
     - slurm_config_deploy_lua_submit_plugin
     - not slurm_config_git_repo is defined
 
+- name: Custom slurm master setup for OpenStack cloud scheduling
+  ansible.builtin.import_tasks: slurm-master-openstack-cloud-scheduling.yml
+  when: slurm_openstack_cloud_scheduling
+
 - name: Start and enable slurm master daemon
   ansible.builtin.service:
     name: slurmctld
