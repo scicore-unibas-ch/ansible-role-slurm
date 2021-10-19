@@ -32,6 +32,25 @@ slurm_update_etc_hosts_file: true
 # Check "templates/job_submit.lua.j2" for details
 slurm_config_deploy_lua_submit_plugin: true
 
+# Use slurm configless https://slurm.schedmd.com/configless_slurm.html
+# This feature requires slurm 20.02 or higher
+# Only tested on RedHat systems but it should work on Ubuntu too if you install ubuntu20.02 or higher
+slurm_configless: false
+
+# Deploy required scripts in slurm master for cloud scheduling using openstack (https://slurm.schedmd.com/elastic_computing.html)
+# This will deploy "ResumeProgram", "SuspendProgram" for slurm.conf
+# and /etc/openstack/clouds.yaml with an application credential in the slurm master
+# This requires a custom slurm.conf. Check "templates/slurm.conf.j2.cloud.example" for an example
+slurm_openstack_cloud_scheduling: false
+slurm_openstack_venv_path: /opt/venv_slurm
+slurm_openstack_auth_url: https://my-openstack-cloud.com:5000/v3
+slurm_openstack_application_credential_id: "4eeabeabcabdwe19451e1d892d1f7"
+slurm_openstack_application_credential_secret: "supersecret1234"
+slurm_openstack_region_name: "RegionOne"
+slurm_openstack_interface: "public"
+slurm_openstack_identity_api_version: 3
+slurm_openstack_auth_type: "v3applicationcredential"
+
 # slurm cluster name as defined in slurm.cfg
 slurm_cluster_name: slurm-cluster
 
@@ -66,7 +85,7 @@ slurm_group:
   RedHat: "root"
   Debian: "slurm"
 
-# EPEL is required to install slurm packages on centos and some dependencies
+# EPEL is required to install slurm packages and some dependencies on CentOS/RedHat systems
 slurm_add_epel_repo: true
 
 # You can set this to true to enable the openhpc yum repos on centos
