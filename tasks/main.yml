@@ -47,7 +47,7 @@
 
 - name: Update apt cache on Debian/Ubuntu systems
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 600
   when:
     - ansible_os_family == 'Debian'
