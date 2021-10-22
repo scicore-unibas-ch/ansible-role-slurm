@@ -64,12 +64,13 @@
     - not slurm_configless
   notify: restart slurm services
 
-- name: Enable and start cgroup services if this is a worker_node
+- name: Enable and start cgroup services if this is a RedHat/CentOS worker_node
   ansible.builtin.service:
     name: "{{ item }}"
     enabled: true
     state: started
   when:
+    - ansible_os_family == "RedHat"
     - not ansible_virtualization_type == "docker"
     - not ansible_virtualization_type == "containerd"
   with_items:
