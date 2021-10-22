@@ -66,6 +66,12 @@
 
   when: slurm_config_git_repo is defined
 
+- name: Make sure the apt cache is updated on Debian/Ubuntu systems
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 600
+  when: ansible_os_family == 'Debian'
+
 - name: Install EPEL repository
   ansible.builtin.yum:
     name: epel-release
