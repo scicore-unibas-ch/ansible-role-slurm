@@ -45,6 +45,14 @@
     - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
     - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
 
+- name: Update apt cache on Debian/Ubuntu systems
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 600
+  when:
+    - ansible_os_family == 'Debian'
+    - slurm_update_apt_cache
+  changed_when: false
 
 - name: Download slurm config from git if "slurm_config_git_repo" is defined
   block:
@@ -65,13 +73,6 @@
         GIT_SSL_NO_VERIFY: "True"
 
   when: slurm_config_git_repo is defined
-
-- name: Make sure the apt cache is updated on Debian/Ubuntu systems
-  ansible.builtin.apt:
-    update_cache: yes
-    cache_valid_time: 600
-  when: ansible_os_family == 'Debian'
-  changed_when: false
 
 - name: Install EPEL repository
   ansible.builtin.yum:

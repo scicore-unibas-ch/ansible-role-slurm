@@ -54,6 +54,10 @@ slurm_group:
 # EPEL is required to install slurm packages and some dependencies on CentOS/RedHat systems
 slurm_add_epel_repo: true
 
+# By default we update the apt cache on Debian/Ubuntu but you can disable it
+# for faster execution after the initial setup
+slurm_update_apt_cache: true
+
 # You can set this to true to enable the openhpc yum repos on centos
 # If you plan to use packages from openhpc you should also update the list of packages for RedHat below
 slurm_add_openhpc_repo: false
