@@ -26,4 +26,3 @@
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0644
   when: not slurm_config_git_repo is defined
-  notify: restart slurm services
