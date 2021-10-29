@@ -85,6 +85,18 @@
     mode: 0755
     state: directory
 
+- name: Deploy /etc/slurm/slurm.conf
+  ansible.builtin.template:
+    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
+    dest: /etc/slurm/slurm.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when:
+    - not slurm_config_git_repo is defined
+    - not slurm_configless
+  notify: restart slurm services
+
 - name: Deploy the required configuration for slurm configless | RedHat
   ansible.builtin.template:
     src: slurm_worker_configless.j2
