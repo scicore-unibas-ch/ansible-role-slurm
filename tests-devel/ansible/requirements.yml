@@ -1,0 +1,12 @@
+# ansible-galaxy role install -r requirements.yml -p ./roles
+
+roles:
+
+  - name: scicore.slurm
+    src: https://github.com/scicore-unibas-ch/ansible-role-slurm.git
+    type: git 
+    version: master
+
+  # - name: scicore.slurm
+  #   version: 0.0.8
+
