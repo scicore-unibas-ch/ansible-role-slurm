@@ -17,6 +17,23 @@ Slurm users are automatically added to the slurm accounting db on the first job 
 a [lua job submission plugin](templates/job_submit.lua.j2)
 
 
+Example inventory
+===================
+
+```
+master ansible_host=192.168.56.100 ansible_user=vagrant ansible_password=vagrant
+submit ansible_host=192.168.56.101 ansible_user=vagrant ansible_password=vagrant
+compute ansible_host=192.168.56.102 ansible_user=vagrant ansible_password=vagrant
+
+[slurm_submit_hosts]
+submit
+
+[slurm_workers]
+compute
+```
+
+**Once you define your inventory make sure to define var "slurm_master_host" pointing to the hostname of your master host**
+
 Role Variables
 --------------
 
