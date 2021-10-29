@@ -1,1 +1,3 @@
 .cache/
+tests-devel/ansible/roles/
+tests-devel/.vagrant/*
