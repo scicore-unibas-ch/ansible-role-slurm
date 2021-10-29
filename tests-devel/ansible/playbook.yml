@@ -1,4 +1,3 @@
-
 ---
 
 - name: Deploy slurm
@@ -7,7 +6,7 @@
   become: true
 
   tasks:
-    
+
     - name: Deploy hardcoded /etc/hosts for Vagrant tests
       ansible.builtin.blockinfile:
         dest: /etc/hosts
