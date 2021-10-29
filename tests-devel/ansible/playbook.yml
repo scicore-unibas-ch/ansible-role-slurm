@@ -7,6 +7,10 @@
 
   tasks:
 
+    - name: Configure NTP time
+      ansible.builtin.import_role:
+        name: geerlingguy.ntp
+
     - name: Deploy hardcoded /etc/hosts for Vagrant tests
       ansible.builtin.blockinfile:
         dest: /etc/hosts

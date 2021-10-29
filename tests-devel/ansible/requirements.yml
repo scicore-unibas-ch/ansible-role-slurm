@@ -8,5 +8,8 @@ roles:
     type: git
     version: master
 
+  - name: geerlingguy.ntp
+    version: 2.3.0
+
 #  - name: scicore.slurm
 #    version: 0.0.8
