@@ -17,9 +17,9 @@ Vagrant.configure("2") do |config|
         sudo yum -y install git
         sudo yum -y install sshpass
         sudo yum -y install python3-virtualenv
-	virtualenv-3 ~vagrant/.venv_ansible && source ~vagrant/.venv_ansible/bin/activate && pip install ansible
-	echo "source ~vagrant/.venv_ansible/bin/activate" >> ~vagrant/.bashrc
-        cd /vagrant/ansible && source ~vagrant/.venv_ansible/bin/activate && ansible-galaxy role install -r requirements.yml -p ./roles/
+	virtualenv-3 ~vagrant/venv_ansible && source ~vagrant/venv_ansible/bin/activate && pip install ansible
+	echo "source ~vagrant/venv_ansible/bin/activate" >> ~vagrant/.bashrc
+        cd /vagrant/ansible && source ~vagrant/venv_ansible/bin/activate && ansible-galaxy role install -r requirements.yml -p ./roles/
       SHELL
     end
   end
