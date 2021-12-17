@@ -64,7 +64,7 @@ def main():
 
     debug = False
     if len(sys.argv) > 2:
-        logger.info(f"Running in debug mode - won't actually create nodes")
+        logger.info(f"Running in debug mode")
         debug = True
 
     hostlist_expr = sys.argv[1]  # argv[1] is list of nodes in slurm format e.g. compute[01-10]
@@ -77,7 +77,7 @@ def main():
         logger.error(f"Error connecting to OpenStack API: {e}")
 
     features = get_slurm_features(hostlist_expr)
-    logger.info(f"Features defined in slurm.conf for node {hostlist_expr}: {features}")
+    logger.info(f"Features defined in slurm.conf for node(s) {hostlist_expr}: {features}")
 
     statedir = get_statesavelocation()
 
