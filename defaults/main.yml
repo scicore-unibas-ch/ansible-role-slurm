@@ -30,6 +30,8 @@ slurm_openstack_region_name: "RegionOne"
 slurm_openstack_interface: "public"
 slurm_openstack_identity_api_version: 3
 slurm_openstack_auth_type: "v3applicationcredential"
+# slurm_openstack_ssh_keypair_name: mykeypair_name
+# slurm_openstack_ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIElrlCStX712QnL2zKy+TpmlxoEtRfm2KUOnPpkMv6ON"
 
 # slurm cluster name as defined in slurm.cfg
 slurm_cluster_name: slurm-cluster
