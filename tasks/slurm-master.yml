@@ -49,6 +49,18 @@
     mode: 0644
   notify: restart slurm services
 
+- name: Deploy /etc/slurm/cgroup.conf to master if this is a configless setup
+  ansible.builtin.template:
+    src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
+    dest: /etc/slurm/cgroup.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when:
+    - not slurm_config_git_repo is defined
+    - slurm_configless
+  notify: restart slurm services
+
 - name: Deploy /etc/slurm/job_submit.lua
   ansible.builtin.template:
     src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
