@@ -75,45 +75,50 @@ def main():
     except Exception as e:
         logger.error(f"Error connecting to OpenStack API: {e}")
 
-    features = get_features(hostlist_expr)
+    features = get_slurm_features(hostlist_expr)
     logger.info(f"Features defined in slurm.conf for node {hostlist_expr}: {features}")
 
     statedir = get_statesavelocation()
 
     new_nodes = expand_nodes(hostlist_expr)
     for node in new_nodes:
-        # extract the openstack parameters from node features:
+
         if node not in features:
             logger.error(f"No Feature definitions found for node {node}: {features}")
 
-        os_parameters = {}
-        os_parameters['image'] = features[node]['image']
-        os_parameters['flavor'] = features[node]['flavor']
-        os_parameters['network'] = features[node]['network']
-        os_parameters['keypair'] = features[node]['keypair']
+        # Query the API for the defined node features to get all the details and to verify
+        # that they actually exist in OpenStack
+        os_objects = {}
+        try:
+            os_objects['image'] = conn.compute.find_image(features[node]['image'])
+        except Exception as e:
+            logger.error(f"Cannot find image: {e}")
 
-        # get openstack objects:
-        os_objects = {
-            'image': conn.compute.find_image(os_parameters['image']),
-            'flavor': conn.compute.find_flavor(os_parameters['flavor']),
-            'network': conn.network.find_network(os_parameters['network']),
-            'keypair': features[node]['keypair'],
-        }
+        try:
+            os_objects['flavor'] = conn.compute.find_flavor(features[node]['flavor'])
+        except Exception as e:
+            logger.error(f"Cannot find flavor: {e}")
+
+        try:
+            os_objects['network'] = conn.network.find_network(features[node]['network'])
+        except Exception as e:
+            logger.error(f"Cannot find network: {e}")
+
+        try:
+            os_objects['keypair'] = conn.compute.find_keypair(features[node]['keypair']),
+        except Exception as e:
+            logger.error(f"Cannot find network: {e}")
 
         # create_server() expects security groups as a list of dicts in format
         # [{'name': 'security_group_name'}, {name: 'another_security_group_name'}]
         list_sec_groups = []
         for s in features[node]['security_groups'].split('|'):
-            #sec_group_details = conn.network.find_security_group(s)
-            #list_sec_groups.append({'name': sec_group_details.name})
-            list_sec_groups.append({'name': s})
+            try:
+                sec_group_details = conn.network.find_security_group(s)
+            except Exception as e:
+                logger.error(f"Cannot find security group: {e}")
+            list_sec_groups.append({'name': sec_group_details.name})
         os_objects['security_groups'] = list_sec_groups
-
-        #  if debug:
-        #      logger.info(f"os_parameters for {node}: {os_parameters}")
-        #  missing = set(REQUIRED_PARAMS).difference(os_parameters.keys())
-        #  if missing:
-        #      logger.error(f"Missing {','.join(missing)} from feature definition for node {node}: {os_parameters}")
 
         not_found = dict((k, v) for (k, v) in os_objects.items() if v is None)
         if not_found:
@@ -146,8 +151,8 @@ def expand_nodes(hostlist_expr):
     scontrol = subprocess.run(['scontrol', 'show', 'hostnames', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
     return scontrol.stdout.strip().split('\n')
 
-def get_features(hostlist_expr):
-    """ Retrieve the features specified for given node(s).
+def get_slurm_features(hostlist_expr):
+    """ Retrieve the features specified slurm.conf for given node(s).
 
         Input is a list of nodes in slurm format. e.g. compute[01-10]
 
@@ -183,11 +188,10 @@ def create_server(conn, name, image, flavor, network, keypair, security_groups):
     try:
         server = conn.compute.create_server(
             name=name, image_id=image.id, flavor_id=flavor.id,
-            networks=[{"uuid": network.id}], key_name=keypair, security_groups=security_groups,
+            networks=[{"uuid": network.id}], key_name=keypair[0].name, security_groups=security_groups,
         )
     except Exception as e:
-        print('petada')
-        #logger.error(f"Error booting VM: {e}")
+        logger.error(f"Error booting VM: {e}")
 
     # we don't need to wait of the server if we use "SlurmctldParameters=cloud_reg_addrs" in slurm.conf
     #server = conn.compute.wait_for_server(server) # wait for node to boot so it gets an IP
