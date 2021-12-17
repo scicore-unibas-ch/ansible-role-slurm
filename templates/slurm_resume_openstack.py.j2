@@ -43,8 +43,6 @@ import sys, os, subprocess, logging.handlers
 import openstack
 import pprint
 
-REQUIRED_PARAMS = ('image', 'flavor', 'keypair', 'network')
-
 # configure logging to syslog - by default only "info" and above categories appear
 logger = logging.getLogger("syslogger")
 logger.setLevel(logging.DEBUG)
@@ -132,12 +130,6 @@ def main():
             # updating the node ip using scontrol is not needed when using "SlurmctldParameters=cloud_reg_addrs"
             #scontrol = subprocess.run(['scontrol', 'update', 'nodename=' + node, 'nodeaddr=' + server_ip], stdout=subprocess.PIPE, universal_newlines=True)
             # Don't need scontrol update nodename={node} nodeaddr={server_ip} when using SlurmctldParameters=cloud_dns
-
-    #  try:
-    #      resume()
-    #  except:
-    #      logger.exception('Exception in main:')
-    #      raise
 
 def get_statesavelocation():
     """ Return the path for Slurm's StateSaveLocation """
