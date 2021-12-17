@@ -57,12 +57,12 @@
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
   when:
-    - slurm_config_deploy_lua_submit_plugin
+    - slurm_config_deploy_lua_submit_plugin | bool
     - not slurm_config_git_repo is defined
 
 - name: Custom slurm master setup for OpenStack cloud scheduling
   ansible.builtin.import_tasks: slurm-master-openstack-cloud-scheduling.yml
-  when: slurm_openstack_cloud_scheduling
+  when: slurm_openstack_cloud_scheduling | bool
 
 - name: Start and enable slurm master daemon
   ansible.builtin.service:

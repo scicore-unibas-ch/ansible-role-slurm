@@ -14,7 +14,7 @@
     state: directory
   when:
     - ansible_os_family == "RedHat"
-    - not slurm_configless
+    - not slurm_configless | bool
 
 - name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
   ansible.builtin.file:
@@ -25,7 +25,7 @@
     state: link
   when:
     - ansible_os_family == "Debian"
-    - not slurm_configless
+    - not slurm_configless | bool
 
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
   ansible.builtin.file:
@@ -61,7 +61,7 @@
     mode: 0644
   when:
     - not slurm_config_git_repo is defined
-    - not slurm_configless
+    - not slurm_configless | bool
   notify: restart slurm services
 
 - name: Enable and start cgroup services if this is a worker_node
@@ -93,7 +93,7 @@
     mode: 0644
   when:
     - ansible_os_family == "RedHat"
-    - slurm_configless
+    - slurm_configless | bool
   notify: restart slurm services
 
 - name: Deploy the required configuration for slurm configless | Debian/Ubuntu
@@ -105,7 +105,7 @@
     mode: 0644
   when:
     - ansible_os_family == "Debian"
-    - slurm_configless
+    - slurm_configless | bool
   notify: restart slurm services
 
 - name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless
@@ -115,7 +115,7 @@
   loop:
     - /etc/slurm
     - /etc/slurm-llnl
-  when: slurm_configless
+  when: slurm_configless | bool
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
