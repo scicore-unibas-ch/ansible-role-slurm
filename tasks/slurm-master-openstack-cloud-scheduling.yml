@@ -16,12 +16,17 @@
         name: python-setuptools
         state: installed
 
-    - name: RedHat | Create python virtualenv to install the openstack client
+    - name: RedHat | Create python virtualenv and upgrade pip and setuptools
       ansible.builtin.pip:
         name:
           - setuptools>46.1.3
           - pip>20.0.2
-          - python-openstackclient
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv-3
+
+    - name: RedHat | Install the openstack client in the python virtualenv
+      ansible.builtin.pip:
+        name: python-openstackclient
         virtualenv: "{{ slurm_openstack_venv_path }}"
         virtualenv_command: virtualenv-3
 
@@ -36,12 +41,17 @@
         name: python3-virtualenv
         state: present
 
-    - name: Debian/Ubuntu | Create python virtualenv to install the openstack client
+    - name: Debian/Ubuntu | Create python virtualenv and upgrade pip and setuptools
       ansible.builtin.pip:
         name:
           - setuptools>46.1.3
           - pip>20.0.2
-          - python-openstackclient
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv
+
+    - name: Debian/Ubuntu | Install the openstack client in the python virtualenv
+      ansible.builtin.pip:
+        name: python-openstackclient
         virtualenv: "{{ slurm_openstack_venv_path }}"
         virtualenv_command: virtualenv
 
