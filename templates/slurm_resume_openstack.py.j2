@@ -66,9 +66,8 @@ def main():
     if len(sys.argv) > 2:
         logger.info(f"Running in debug mode - won't actually create nodes")
         debug = True
-    hostlist_expr = sys.argv[1]
+    hostlist_expr = sys.argv[1]  # argv[1] is list of nodes in slurm format e.g. compute[01-10]
     logger.info(f"Slurmctld invoked resume node {hostlist_expr}")
-    new_nodes = expand_nodes(hostlist_expr)
 
     try:
         conn = openstack.connection.from_config()
@@ -77,29 +76,45 @@ def main():
         logger.error(f"Error connecting to OpenStack API: {e}")
 
     features = get_features(hostlist_expr)
-    logger.info(f"Features defined in slurm.conf for node {hostlist_expr}: {list(features.values())[0]}")
+    logger.info(f"Features defined in slurm.conf for node {hostlist_expr}: {features}")
 
     statedir = get_statesavelocation()
 
+    new_nodes = expand_nodes(hostlist_expr)
     for node in new_nodes:
         # extract the openstack parameters from node features:
         if node not in features:
             logger.error(f"No Feature definitions found for node {node}: {features}")
-        os_parameters = dict(feature.split('=') for feature in features[node])
-        if debug:
-            logger.info(f"os_parameters for {node}: {os_parameters}")
-        missing = set(REQUIRED_PARAMS).difference(os_parameters.keys())
-        if missing:
-            logger.error(f"Missing {','.join(missing)} from feature definition for node {node}: {os_parameters}")
+
+        os_parameters = {}
+        os_parameters['image'] = features[node]['image']
+        os_parameters['flavor'] = features[node]['flavor']
+        os_parameters['network'] = features[node]['network']
+        os_parameters['keypair'] = features[node]['keypair']
 
         # get openstack objects:
         os_objects = {
             'image': conn.compute.find_image(os_parameters['image']),
             'flavor': conn.compute.find_flavor(os_parameters['flavor']),
             'network': conn.network.find_network(os_parameters['network']),
-            'keypair': conn.compute.find_keypair(os_parameters['keypair']),
-            'security_groups': os_parameters['security_groups'].split('|'),  # this is a list of security group names. Make sure to define in slurm.conf as
+            'keypair': features[node]['keypair'],
         }
+
+        # create_server() expects security groups as a list of dicts in format
+        # [{'name': 'security_group_name'}, {name: 'another_security_group_name'}]
+        list_sec_groups = []
+        for s in features[node]['security_groups'].split('|'):
+            #sec_group_details = conn.network.find_security_group(s)
+            #list_sec_groups.append({'name': sec_group_details.name})
+            list_sec_groups.append({'name': s})
+        os_objects['security_groups'] = list_sec_groups
+
+        #  if debug:
+        #      logger.info(f"os_parameters for {node}: {os_parameters}")
+        #  missing = set(REQUIRED_PARAMS).difference(os_parameters.keys())
+        #  if missing:
+        #      logger.error(f"Missing {','.join(missing)} from feature definition for node {node}: {os_parameters}")
+
         not_found = dict((k, v) for (k, v) in os_objects.items() if v is None)
         if not_found:
             raise ValueError('Could not find openstack objects for: %s' % ', '.join(not_found))
@@ -131,23 +146,31 @@ def expand_nodes(hostlist_expr):
     scontrol = subprocess.run(['scontrol', 'show', 'hostnames', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
     return scontrol.stdout.strip().split('\n')
 
-def get_features(nodenames):
+def get_features(hostlist_expr):
     """ Retrieve the features specified for given node(s).
 
-        Returns a dict with a key/value pair for each node. Keys are node names, values are lists of strings, one string per feature.
+        Input is a list of nodes in slurm format. e.g. compute[01-10]
+
+        Returns a dict of dicts. Keys for main dict are node names. Keys for nested dicts are feature=value
     """
 
-    scontrol = subprocess.run(['scontrol', 'show', 'node', nodenames], stdout=subprocess.PIPE, universal_newlines=True)
-    features = {}
+    scontrol = subprocess.run(['scontrol', 'show', 'node', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
+    features_all_nodes = {}
     for line in scontrol.stdout.splitlines():
         line = line.strip()
         if line.startswith('NodeName'): # NodeName=dev-small-cloud-1 CoresPerSocket=1
             node = line.split()[0].split('=')[1]
         if line.startswith('AvailableFeatures'):
-            feature_args = line.split('=', 1)[1]
-            features[node] = feature_args.split(',')
+            node_features = {}
+            all_features_from_slurm_conf = line.split('=', 1)[1]
+            for f in all_features_from_slurm_conf.split(','):  # Features from slurm.conf like "image=compute_image,flavor=m1.large,keypair=my_key"
+                single_feature = f.split('=')
+                feature_name = single_feature[0]  # e.g. feature name: image
+                feature_value = single_feature[1] # e.g. feature value: compute_image
+                node_features[feature_name] = feature_value
+            features_all_nodes[node] = node_features
 
-    return features
+    return features_all_nodes
 
 def create_server(conn, name, image, flavor, network, keypair, security_groups):
     """ Create a server based on the features defined in slurm.conf
@@ -157,31 +180,22 @@ def create_server(conn, name, image, flavor, network, keypair, security_groups):
 
         Returns a server object and an ip
     """
-
     try:
         server = conn.compute.create_server(
             name=name, image_id=image.id, flavor_id=flavor.id,
-            networks=[{"uuid": network.id}], key_name=keypair.name, security_groups=[{"name": security_groups[0]}],
+            networks=[{"uuid": network.id}], key_name=keypair, security_groups=security_groups,
         )
     except Exception as e:
-        logger.error(f"Error booting VM: {e}")
-
-    # add extra security groups to the server
-    if len(security_groups) > 1:
-        for i in range(1,len(security_groups)):
-            try:
-                conn.add_server_security_groups(server, security_groups[i])
-            except Exception as e:
-                logger.error(f"Error adding security group: {e}")
+        print('petada')
+        #logger.error(f"Error booting VM: {e}")
 
     # we don't need to wait of the server if we use "SlurmctldParameters=cloud_reg_addrs" in slurm.conf
     #server = conn.compute.wait_for_server(server) # wait for node to boot so it gets an IP
-
     #server_ip = list(server.addresses.values())[0][0]['addr']
     #server_ip = next(conn.compute.server_ips(server)).address  # conn.compute.server_ips() returns an iterator. Use next() to get first element
     #logger.info(f"Node {name} has booted with ip {server_ip}")
-
     #return server, server_ip
+
     return server
 
 if __name__ == '__main__':
