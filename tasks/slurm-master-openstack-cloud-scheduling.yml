@@ -57,6 +57,18 @@
 
   when: ansible_os_family == "Debian"
 
+- name: Deploy /etc/slurm/cgroup.conf to master if this is a configless setup
+  ansible.builtin.template:
+    src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
+    dest: /etc/slurm/cgroup.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when:
+    - not slurm_config_git_repo is defined
+    - slurm_configless
+  notify: restart slurm services
+
 - name: Deploy /etc/slurm/slurm_resume_openstack.py
   ansible.builtin.template:
     src: slurm_resume_openstack.py.j2
@@ -64,6 +76,7 @@
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
+  when: not slurm_config_git_repo is defined
   notify: restart slurmctld service
 
 - name: Deploy /etc/slurm/slurm_suspend_openstack.py
@@ -73,6 +86,7 @@
     owner: "{{ slurm_user[ansible_os_family] }}"
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
+  when: not slurm_config_git_repo is defined
   notify: restart slurmctld service
 
 - name: Create folder /etc/openstack/ to deploy /etc/openstack/clouds.yaml
