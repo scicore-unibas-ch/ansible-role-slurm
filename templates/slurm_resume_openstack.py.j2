@@ -126,7 +126,7 @@ def main():
             logger.info(f"os_parameters for {node} : {os_parameters}")
         if not debug:
             logger.info(f"Creating slurm node {node}")
-            server = create_server(conn, node, **os_parameters) # TODO: save id to disk so can use it instead of name on deletion (to cope with multiple instances with same name)
+            server = create_server(conn, node, **os_parameters)
             with open(os.path.join(statedir, node), 'w') as f:
                 f.write(server.id)
             # updating the node ip using scontrol is not needed when using "SlurmctldParameters=cloud_reg_addrs"
@@ -147,6 +147,9 @@ def get_statesavelocation():
             return line.split()[-1]
 
 def expand_nodes(hostlist_expr):
+    """ Convert slurm hosts list expression like compute[01-03] to a list of nodes.
+        Returns a list like ['compute01', 'compute02', 'compute03']
+    """
     scontrol = subprocess.run(['scontrol', 'show', 'hostnames', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
     return scontrol.stdout.strip().split('\n')
 
@@ -178,11 +181,12 @@ def get_slurm_features(hostlist_expr):
 
 def create_server(conn, name, image, flavor, network, keypair, security_groups):
     """ Create a server based on the features defined in slurm.conf
-        Every feature exceping "security_groups" is a string. e.g. image=centos7,flavor=m1.medium
-        security_groups is a list of security groups names. Each name must be splitted using a | in slurm.conf .e.g
-        NodeName=compute[01-03] State=CLOUD Features=image=centos7,flavor=m1.medium,security_groups=default|slurm
 
-        Returns a server object and an ip
+        Every input argument is an openstack object excepting "name" and "security_groups"
+
+        security_groups is a list of dicts in format [{'name': 'security_group_name'}, {name: 'another_security_group_name'}]
+
+        Returns a server object
     """
     try:
         server = conn.compute.create_server(
