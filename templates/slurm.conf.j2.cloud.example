@@ -1,0 +1,235 @@
+# **Note:** This file needs to have identical contents on all nodes of
+# the cluster.  See the `slurm.conf` man page for more information.
+#
+#
+
+# Unique name for identifying this cluster entries in the DB
+ClusterName={{ slurm_cluster_name }}
+ControlMachine={{ slurm_master_host }}
+
+## scheduler settings
+#
+SchedulerType=sched/backfill
+SchedulerPort=7321
+SelectType=select/cons_res
+SelectTypeParameters=CR_LLN,CR_Core_Memory
+
+{% if slurm_config_deploy_lua_submit_plugin %}
+JobSubmitPlugins=lua
+{% endif %}
+
+# use the "multifactor" plugin with weights set up to be multi-user ready
+PriorityType=priority/multifactor
+#PriorityWeightAge=2000
+#PriorityWeightFairshare=10000
+#PriorityWeightJobSize=1000
+#PriorityWeightPartition=4000
+#PriorityWeightQOS=4000
+PriorityWeightAge=100
+PriorityWeightFairshare=10000
+PriorityWeightJobSize=500
+PriorityWeightPartition=10000
+PriorityWeightQOS=2000
+
+# # define reboot program
+
+#RebootProgram = "/sbin/shutdown -r now"
+
+# fair share settings
+PriorityDecayHalfLife=14-0
+PriorityUsageResetPeriod=NONE
+PriorityMaxAge=7-0
+PriorityFavorSmall=NO
+PriorityFlags=FAIR_TREE
+
+## Topology for IB network
+#TopologyPlugin=topology/tree
+
+# Configure support for our GPUs
+#GresTypes=gpu
+
+## accounting settings
+#
+
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageEnforce=associations,limits,qos
+#AccountingStoreJobComment=YES
+AccountingStorageHost={{ slurm_dbd_host }}
+AccountingStoragePort=6819
+
+#AccountingStorageTRES=gres/gpu
+
+# the "job completion" info is redundant if the accounting
+# infrastructure is enabled, so turn it off as it's an endless source
+# of authentication and DB connection problems ...
+# TODO setup ElasticSearch configuration
+# JobCompType=jobcomp/elasticsearch
+# JobCompLoc=http://jobs-accounting.cluster.bc2.ch:9200
+
+# No power consumption acct
+AcctGatherEnergyType=acct_gather_energy/none
+
+# No IB usage accounting
+AcctGatherInfinibandType=acct_gather_infiniband/none
+
+# No filesystem accounting (only works with Lustre)
+AcctGatherFilesystemType=acct_gather_filesystem/none
+
+# No job profiling (for now)
+AcctGatherProfileType=acct_gather_profile/none
+#AcctGatherProfileType=acct_gather_profile/hdf5
+
+#JobAcctGatherType=jobacct_gather/linux
+JobacctGatherType=jobacct_gather/cgroup
+JobAcctGatherFrequency=60
+
+
+## job execution settings
+#
+
+CheckpointType=checkpoint/none
+#CheckpointType=checkpoint/blcr
+#JobCheckpointDir=/var/lib/slurm/checkpoint
+
+# requeue jobs on node failure, unless users ask otherwise
+JobRequeue=0
+
+# max number of jobs in a job array
+MaxArraySize=150000
+
+# max number of jobs pending + running
+MaxJobCount=1000000  #1'000'000
+
+
+MpiDefault=pmi2
+# Note: Apparently, the `MpiParams` option is needed also for non-mpi
+# jobs in slurm 2.5.3.
+#MpiParams=ports=12000-12999
+
+# track resource usage via Linux /proc tree
+#ProctrackType=proctrack/linuxproc
+ProctrackType=proctrack/cgroup
+
+# do not propagate `ulimit` restrictions found on login nodes
+PropagateResourceLimits=NONE
+
+# automatically return nodes to service, unless they have been marked DOWN by admins
+ReturnToService=0
+
+#TaskPlugin=task/none
+TaskPlugin=task/affinity,task/cgroup  # as recommended in https://slurm.schedmd.com/cgroup.conf.html
+#Prolog=/etc/slurm/scripts/prolog.sh
+#TaskProlog=/etc/slurm/scripts/task_prolog.sh
+#Epilog=/etc/slurm/scripts/epilog.sh
+
+#TmpFs=/scratch
+
+# limit virtual mem usage to 101% of real mem usage
+#VSizeFactor=101
+
+
+# misc timeout settings (commented lines show the default)
+#
+BatchStartTimeout=60
+CompleteWait=35
+#EpilogMsgTime=2000
+#HealthCheckInterval=0
+#HealthCheckProgram=
+InactiveLimit=0
+KillWait=30
+#MessageTimeout=10
+#ResvOverRun=0
+MinJobAge=300
+#OverTimeLimit=0
+#UnkillableStepTimeout=60
+#VSizeFactor=0
+Waittime=0
+
+
+## `slurmctld` settings (controller nodes)
+#
+##ControlMachine=localhost
+#ControlAddr=10.1.1.156
+
+SlurmUser={{ slurm_user[ansible_os_family] }}
+{% if ansible_os_family == "RedHat" %}
+SlurmctldPidFile=/var/run/slurmctld.pid
+{% endif %}
+{% if ansible_os_family == "Debian" %}
+SlurmctldPidFile=/run/slurmctld.pid
+{% endif %}
+SlurmctldPort=6817
+SlurmctldTimeout=300
+
+StateSaveLocation={{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}
+
+#SlurmctldDebug=info
+SlurmctldDebug=error
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
+
+#MailProg=/usr/bin/smail
+
+
+## `slurmd` settings (compute nodes)
+#
+SlurmdPort=6818
+{% if ansible_os_family == "RedHat" %}
+SlurmdPidFile=/var/run/slurmd.pid
+{% endif %}
+{% if ansible_os_family == "Debian" %}
+SlurmdPidFile=/run/slurmd.pid
+{% endif %}
+SlurmdSpoolDir={{ slurm_slurmd_spool_path | default('/var/spool/slurm') }}
+SlurmdTimeout=300
+
+SlurmdDebug=verbose
+SlurmdLogFile=/var/log/slurm/slurmd.log
+
+AuthType=auth/munge
+CryptoType=crypto/munge
+
+DisableRootJobs=NO
+
+SlurmctldParameters=enable_configless,cloud_reg_addrs,idle_on_node_suspend
+
+## Default options for jobs
+#
+DefMemPerCPU=1000
+
+## cloud settings
+PrivateData=cloud  # Powered down nodes in the cloud are visible
+ResumeProgram=/etc/slurm/slurm_resume_openstack.py
+SuspendProgram=/etc/slurm/slurm_suspend_openstack.py
+ResumeRate=0  #number of nodes per minute that can be created; 0 means no limit
+ResumeTimeout=900  #max time in seconds between ResumeProgram running and when the node is ready for use
+SuspendRate=0  #number of nodes per minute that can be suspended/destroyed
+SuspendTime=60  #time in seconds before an idle node is suspended
+SuspendTimeout=60  #time between running SuspendProgram and the node being completely down
+#CommunicationParameters=NoAddrCache  # By default, Slurm will cache a node's network address after successfully establishing the node's network address. This option disables the cache and Slurm will look up the node's network address each time a connection is made. This is useful, for example, in a cloud environment where the node addresses come and go out of DNS
+SuspendExcParts=static  # nodes in these partition won't be suspended
+
+## static nodes
+NodeName=scicore-devel-slurm-compute-01 CPUs=4 RealMemory=7820 Sockets=4 CoresPerSocket=1 ThreadsPerCore=1
+
+## dynamic nodes
+## feature "security_groups" will be converted to a list in the resume script. Each security group name must be splitted using a pipe |
+NodeName=scicore-devel-slurm-compute-dynamic-[01-04] CPUs=4 RealMemory=7820 Sockets=4 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.large,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+
+NodeName=scicore-devel-slurm-compute-dynamic-[05-08] CPUs=8 RealMemory=15884 Sockets=8 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+
+NodeName=scicore-devel-slurm-compute-dynamic-[09-12] CPUs=8 RealMemory=32011 Sockets=8 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xxlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+
+NodeName=scicore-devel-slurm-compute-dynamic-[13-16] CPUs=16 RealMemory=64264 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xxxlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+
+NodeName=scicore-devel-slurm-compute-dynamic-[17-20] CPUs=16 RealMemory=257788 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.bigmem,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+
+## Cluster partitions
+PartitionName=static Nodes=scicore-devel-slurm-compute-01, Default=YES LLN=NO State=UP
+PartitionName=dynamic-4cores-8g Nodes=scicore-devel-slurm-compute-dynamic-[01-04] Default=NO LLN=NO State=UP 
+PartitionName=dynamic-8cores-16g Nodes=scicore-devel-slurm-compute-dynamic-[05-08], Default=NO LLN=NO State=UP
+PartitionName=dynamic-8cores-32g Nodes=scicore-devel-slurm-compute-dynamic-[09-12], Default=NO LLN=NO State=UP
+PartitionName=dynamic-16cores-64g Nodes=scicore-devel-slurm-compute-dynamic-[13-16], Default=NO LLN=NO State=UP
+PartitionName=dynamic-16cores-256g Nodes=scicore-devel-slurm-compute-dynamic-[17-20], Default=NO LLN=NO State=UP
+
+# vim: syntax=sh

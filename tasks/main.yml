@@ -41,7 +41,7 @@
           {% endfor %}
 
   when:
-    - slurm_update_etc_hosts_file
+    - slurm_update_etc_hosts_file | bool
     - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
     - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
 
@@ -79,7 +79,7 @@
     name: epel-release
     state: installed
   when:
-    - slurm_add_epel_repo
+    - slurm_add_epel_repo | bool
     - ansible_os_family == "RedHat"
 
 - name: Install OpenHPC repositories (RHEL7)
@@ -87,7 +87,7 @@
     name: "{{ slurm_ohpc_repos_url['rhel7'] }}"
     state: installed
   when:
-    - slurm_add_openhpc_repo
+    - slurm_add_openhpc_repo | bool
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == "7"
 
@@ -97,7 +97,7 @@
     state: installed
     disable_gpg_check: true
   when:
-    - slurm_add_openhpc_repo
+    - slurm_add_openhpc_repo | bool
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == "8"
 
