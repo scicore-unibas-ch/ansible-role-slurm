@@ -12,7 +12,8 @@ ControlMachine={{ slurm_master_host }}
 SchedulerType=sched/backfill
 SchedulerPort=7321
 SelectType=select/cons_res
-SelectTypeParameters=CR_LLN,CR_Core_Memory
+SelectTypeParameters=CR_Core_Memory
+#SelectTypeParameters=CR_LLN,CR_Core_Memory
 
 {% if slurm_config_deploy_lua_submit_plugin %}
 JobSubmitPlugins=lua
@@ -138,10 +139,11 @@ CompleteWait=35
 InactiveLimit=0
 KillWait=30
 #MessageTimeout=10
+MessageTimeout=60
 #ResvOverRun=0
 MinJobAge=300
 #OverTimeLimit=0
-#UnkillableStepTimeout=60
+UnkillableStepTimeout=180
 #VSizeFactor=0
 Waittime=0
 
@@ -163,8 +165,7 @@ SlurmctldTimeout=300
 
 StateSaveLocation={{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}
 
-#SlurmctldDebug=info
-SlurmctldDebug=error
+SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
 
@@ -181,9 +182,9 @@ SlurmdPidFile=/var/run/slurmd.pid
 SlurmdPidFile=/run/slurmd.pid
 {% endif %}
 SlurmdSpoolDir={{ slurm_slurmd_spool_path | default('/var/spool/slurm') }}
-SlurmdTimeout=300
+SlurmdTimeout=180
 
-SlurmdDebug=verbose
+SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
 
 AuthType=auth/munge
@@ -191,45 +192,52 @@ CryptoType=crypto/munge
 
 DisableRootJobs=NO
 
-SlurmctldParameters=enable_configless,cloud_reg_addrs,idle_on_node_suspend
+{% if slurm_openstack_cloud_reg_addrs %}
+# We use cloud_reg_addrs so slurmd reports the node ip to slurmctld on boot
+# This is not required when using neutron internal dns
+SlurmctldParameters=enable_configless,idle_on_node_suspend,cloud_reg_addrs
+{% else %}
+# We don't use cloud_reg_addrs option because we use the neutron internal dns
+SlurmctldParameters=enable_configless,idle_on_node_suspend
+{% endif %}
 
 ## Default options for jobs
 #
-DefMemPerCPU=1000
+DefMemPerCPU=1800
 
 ## cloud settings
+#TreeWidth=10000
 PrivateData=cloud  # Powered down nodes in the cloud are visible
 ResumeProgram=/etc/slurm/slurm_resume_openstack.py
 SuspendProgram=/etc/slurm/slurm_suspend_openstack.py
-ResumeRate=0  #number of nodes per minute that can be created; 0 means no limit
-ResumeTimeout=900  #max time in seconds between ResumeProgram running and when the node is ready for use
-SuspendRate=0  #number of nodes per minute that can be suspended/destroyed
-SuspendTime=60  #time in seconds before an idle node is suspended
-SuspendTimeout=60  #time between running SuspendProgram and the node being completely down
-#CommunicationParameters=NoAddrCache  # By default, Slurm will cache a node's network address after successfully establishing the node's network address. This option disables the cache and Slurm will look up the node's network address each time a connection is made. This is useful, for example, in a cloud environment where the node addresses come and go out of DNS
+ResumeRate=2  #number of nodes per minute that can be created; 0 means no limit
+ResumeTimeout=300  #max time in seconds between ResumeProgram running and when the node is ready for use
+SuspendRate=2  #number of nodes per minute that can be suspended/destroyed
+SuspendTime=600 #time in seconds before an idle node is suspended
+SuspendTimeout=180  #time between running SuspendProgram and the node being completely down
+CommunicationParameters=NoAddrCache  # By default, Slurm will cache a node's network address after successfully establishing the node's network address. This option disables the cache and Slurm will look up the node's network address each time a connection is made. This is useful, for example, in a cloud environment where the node addresses come and go out of DNS
 SuspendExcParts=static  # nodes in these partition won't be suspended
 
 ## static nodes
-NodeName=scicore-devel-slurm-compute-01 CPUs=4 RealMemory=7820 Sockets=4 CoresPerSocket=1 ThreadsPerCore=1
+NodeName={{ local_slurm_compute_hostname_prefix }}-template CPUs=2 RealMemory=3500 Sockets=2 CoresPerSocket=1 ThreadsPerCore=1
 
 ## dynamic nodes
-## feature "security_groups" will be converted to a list in the resume script. Each security group name must be splitted using a pipe |
-NodeName=scicore-devel-slurm-compute-dynamic-[01-04] CPUs=4 RealMemory=7820 Sockets=4 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.large,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+## This config is manually configured for each tenant
+## Feature "security_groups" will be converted to a list in the resume script. Each security group name must be splitted using a pipe |
+## Don't use flavor "m1.large" in biomedit cloud. The disk size in flavor "m1.large" is too small
+NodeName={{ local_slurm_compute_hostname_prefix }}-dynamic-[01-04] CPUs=8 RealMemory=15880 Sockets=8 CoresPerSocket=1 ThreadsPerCore=1 MemSpecLimit=1024 State=CLOUD Features=image={{ local_slurm_compute_image_name }},flavor={{ local_slurm_flavor_8c_16g }},keypair=project_{{ local_tenant_name }},network={{ local_tenant_name }}_network,security_groups={{ local_tenant_name }}_default|{{ local_tenant_name }}_slurm_default
 
-NodeName=scicore-devel-slurm-compute-dynamic-[05-08] CPUs=8 RealMemory=15884 Sockets=8 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+NodeName={{ local_slurm_compute_hostname_prefix }}-dynamic-[05-08] CPUs=16 RealMemory=32000 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 MemSpecLimit=1024 State=CLOUD Features=image={{ local_slurm_compute_image_name }},flavor={{ local_slurm_flavor_16c_32g }},keypair=project_{{ local_tenant_name }},network={{ local_tenant_name }}_network,security_groups={{ local_tenant_name }}_default|{{ local_tenant_name }}_slurm_default
 
-NodeName=scicore-devel-slurm-compute-dynamic-[09-12] CPUs=8 RealMemory=32011 Sockets=8 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xxlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+NodeName={{ local_slurm_compute_hostname_prefix }}-dynamic-[09-12] CPUs=16 RealMemory=64264 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 MemSpecLimit=1024 State=CLOUD Features=image={{ local_slurm_compute_image_name }},flavor={{ local_slurm_flavor_16c_64g }},keypair=project_{{ local_tenant_name }},network={{ local_tenant_name }}_network,security_groups={{ local_tenant_name }}_default|{{ local_tenant_name }}_slurm_default
 
-NodeName=scicore-devel-slurm-compute-dynamic-[13-16] CPUs=16 RealMemory=64264 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.xxxlarge,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
-
-NodeName=scicore-devel-slurm-compute-dynamic-[17-20] CPUs=16 RealMemory=257788 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 State=CLOUD Features=image=scicore-devel-slurm-compute-node,flavor=m1.bigmem,keypair=project_scicore_devel,network=scicore_devel_network,security_groups=scicore_devel_default|scicore_devel_slurm_default
+NodeName={{ local_slurm_compute_hostname_prefix }}-dynamic-[13-14] CPUs=16 RealMemory=128772 Sockets=16 CoresPerSocket=1 ThreadsPerCore=1 MemSpecLimit=1024 State=CLOUD Features=image={{ local_slurm_compute_image_name }},flavor={{ local_slurm_flavor_16c_128g }},keypair=project_{{ local_tenant_name }},network={{ local_tenant_name }}_network,security_groups={{ local_tenant_name }}_default|{{ local_tenant_name }}_slurm_default
 
 ## Cluster partitions
-PartitionName=static Nodes=scicore-devel-slurm-compute-01, Default=YES LLN=NO State=UP
-PartitionName=dynamic-4cores-8g Nodes=scicore-devel-slurm-compute-dynamic-[01-04] Default=NO LLN=NO State=UP 
-PartitionName=dynamic-8cores-16g Nodes=scicore-devel-slurm-compute-dynamic-[05-08], Default=NO LLN=NO State=UP
-PartitionName=dynamic-8cores-32g Nodes=scicore-devel-slurm-compute-dynamic-[09-12], Default=NO LLN=NO State=UP
-PartitionName=dynamic-16cores-64g Nodes=scicore-devel-slurm-compute-dynamic-[13-16], Default=NO LLN=NO State=UP
-PartitionName=dynamic-16cores-256g Nodes=scicore-devel-slurm-compute-dynamic-[17-20], Default=NO LLN=NO State=UP
+PartitionName=static Nodes={{ local_slurm_compute_hostname_prefix }}-template, Default=NO LLN=NO State=INACTIVE
+PartitionName=dynamic-8cores-16g Nodes={{ local_slurm_compute_hostname_prefix }}-dynamic-[01-04], Default=YES LLN=NO State=UP
+PartitionName=dynamic-16cores-32g Nodes={{ local_slurm_compute_hostname_prefix }}-dynamic-[05-08], Default=NO LLN=NO State=UP
+PartitionName=dynamic-16cores-64g Nodes={{ local_slurm_compute_hostname_prefix }}-dynamic-[09-12], Default=NO LLN=NO State=UP
+PartitionName=dynamic-16cores-128g Nodes={{ local_slurm_compute_hostname_prefix }}-dynamic-[13-14], Default=NO LLN=NO State=UP
 
 # vim: syntax=sh
