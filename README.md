@@ -102,7 +102,7 @@ slurm_group:
   RedHat: "root"
   Debian: "slurm"
 
-# EPEL is required to install slurm packages and some dependencies on CentOS/RedHat systems
+# EPEL is required to install slurm packages and some dependencies on CentOS/RedHat systems.
 slurm_add_epel_repo: true
 
 # You can set this to true to enable the openhpc yum repos on centos
