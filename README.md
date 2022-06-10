@@ -58,6 +58,7 @@ slurm_configless: false
 # This will deploy "ResumeProgram", "SuspendProgram" for slurm.conf
 # and /etc/openstack/clouds.yaml with an application credential in the slurm master
 # This requires a custom slurm.conf. Check "templates/slurm.conf.j2.cloud.example" for an example
+# It's recommended to use [OpenStack's internal DNS resolution] (https://docs.openstack.org/neutron/latest/admin/config-dns-int.html#the-networking-service-internal-dns-resolution) 
 slurm_openstack_cloud_scheduling: false
 slurm_openstack_venv_path: /opt/venv_slurm
 slurm_openstack_auth_url: https://my-openstack-cloud.com:5000/v3
