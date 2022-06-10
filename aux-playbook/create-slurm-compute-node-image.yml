@@ -5,18 +5,18 @@
 
 - name: Create an OpenStack image to be used for slurm dynamic compute nodes
   hosts: localhost
-  become: no
-  gather_facts: no
+  become: false
+  gather_facts: false
 
   vars_prompt:
 
     - name: tenant_name
       prompt: Tenant name?
-      private: no
+      private: false
 
     - name: server_id
       prompt: Server ID to snapshot?
-      private: no
+      private: false
 
   tasks:
 
