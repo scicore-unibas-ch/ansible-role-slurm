@@ -170,7 +170,7 @@ the OpenStack client, which is installed inside a virtualenv. The argument to th
 
 * The flavor, image, network, keypair and security groups to be used must be defined as [node Features in slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_Features) e.g. `NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm`
 
-* Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml". It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required ansible variables to populate this config file.
+* Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml" in the slurm master host. It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required ansible variables to populate this config file.
 
 * Both "ResumeProgram" and "SuspendProgram" will write logs to "/var/log/messages" in the slurm master host. You can check this log for debugging purposes when booting cloud nodes.
 
