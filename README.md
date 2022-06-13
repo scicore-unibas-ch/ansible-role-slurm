@@ -157,7 +157,7 @@ Make sure that your OpenStack cloud has [internal DNS resolution](https://docs.o
 This is required so when a new node is booted its hostname can be resolved by the slurm master using the OpenStack internal DNS.
 
 You should also check the example config file [slurm.conf.j2.cloud.example](templates/slurm.conf.j2.cloud.example) provided with this role. 
-**slurm.conf.j2.cloud.example is provided as an example and you will need to adapt it to your specific needs and point the ansible var slurm_conf_custom_template to your custom config**
+**slurm.conf.j2.cloud.example is provided as an example and you will need to adapt it to your specific needs and point the role var `slurm_conf_custom_template` to your custom config**
 
 ## Cloud scheduling config overview
 
@@ -168,9 +168,10 @@ the OpenStack client, which is installed inside a virtualenv. The argument to th
 
 * When a compute node is idle the slurm master will execute the [SuspendProgram](templates/slurm_suspend_openstack.py.j2) to stop the nodes. The argument to the program is the names of nodes (using Slurm's hostlist expression format) to power down.
 
-* The OpenStack options used to boot dynamic compute nodes (flavor, image, network, keypair and security groups) must be defined as [node Features in slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_Features) e.g. `NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm`
+* The OpenStack options used to boot dynamic compute nodes (flavor, image, network, keypair and security groups) must be defined as [node Features in slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_Features) e.g. 
+`NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm`
 
-* Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml" in the slurm master host. It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required ansible variables to populate this config file.
+* Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml" in the slurm master host. It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required role variables to populate this config file.
 
 * Both "ResumeProgram" and "SuspendProgram" will write logs to "/var/log/messages" in the slurm master host. You can check this log for debugging purposes when booting cloud nodes.
 
