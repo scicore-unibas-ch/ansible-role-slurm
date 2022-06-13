@@ -168,7 +168,7 @@ the OpenStack client, which is installed inside a virtualenv. The argument to th
 
 * When a compute node is idle the slurm master will execute the [SuspendProgram](templates/slurm_suspend_openstack.py.j2) to stop the nodes. The argument to the program is the names of nodes (using Slurm's hostlist expression format) to power down.
 
-* The flavor, image, network, keypair and security groups to be used must be defined as [node Features in slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_Features) e.g. `NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm`
+* The OpenStack options used to boot dynamic compute nodes (flavor, image, network, keypair and security groups) must be defined as [node Features in slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_Features) e.g. `NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm`
 
 * Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml" in the slurm master host. It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required ansible variables to populate this config file.
 
@@ -184,18 +184,20 @@ Boot at least 3 machines:
   * slurm submit (login node)
   * slurm worker (this can be a small machine that we will use just to create an OpenStack image with the required config for the cloud compute nodes)
 
-Populate your ansible inventory and add the machines to the right inventory groups referenced by ansible vars "slurm_submit_group" and "slurm_workers_group". Define var "slurm_master_host" with the hostname of the slurm master. Every machine in the cluster should be able to resolve this hostname to the master's ip. Every machine in the cluster must be able to connect to this machine (review your security groups and local firewall)
+Populate your ansible inventory and add the machines to the right inventory groups referenced by role vars `slurm_submit_group` and `slurm_workers_group`. 
 
-Create a copy of "slurm.conf.j2.cloud.example", adapt it to your needs and point ansible var "slurm_conf_custom_template" to your config file. Your config file should provide a static partition which only includes the slurm worker machine we booted before. 
+Define role var `slurm_master_host` with the hostname of the slurm master. Every machine in the cluster should be able to resolve this hostname to the master's ip. Every machine in the cluster must be able to connect to this machine (review your security groups and local firewall)
+
+Create a copy of `slurm.conf.j2.cloud.example`, adapt it to your needs and point the role var `slurm_conf_custom_template` to your config file. Your config file should provide a partition named "static" which only includes the slurm worker machine we booted before. 
 
 Define ansible var `slurm_configless: true` so the compute nodes are configured in configless mode. When a slurm worker is configured in configless mode slurmd daemon will contact the slurm master on first boot and will download slurm.conf to `/var/run/slurm/conf/slurm.conf`
 
-Execute the role to configure all your machines and you should get a working slurm cluster with a single node in the static partition.
+Execute the role to configure all your machines and you should get a working slurm cluster with a single node in partition "static".
  
 Now you can run your custom playbooks or scripts to customize the slurm worker e.g. add NFS mounts, install LDAP client, enable software modules, install extra software..etc
 
-Create an OpenStack image from the machine in the static partition which includes your required customizations. Check [create-slurm-compute-node-image.yml](aux-playbook/create-slurm-compute-node-image.yml) for an example.
+Create an OpenStack image from the machine in partition "static" which includes your required customizations. Check [create-slurm-compute-node-image.yml](aux-playbook/create-slurm-compute-node-image.yml) for an example.
 
-Update your copy of "slurm.conf.j2.cloud.example" and define the proper node features with the openstack image name, key name, network name and security groups. Rerun the playbook to deploy your updated config.
+Update your copy of `slurm.conf.j2.cloud.example` and define the proper node features with the openstack image name, key name, network name and security groups. Rerun the playbook to deploy your updated config.
 
 Now (hopefully) you should have a working slurm cluster with cloud scheduling support. You should see the slurm cloud partitions when executing `sinfo -Nel`. Try to submit a job to one of the cloud partitions and monitor `/var/log/messages` and `/var/log/slurm/slurmctld.log` in the slurm master host.
