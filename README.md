@@ -197,9 +197,3 @@ Create an OpenStack image from the machine in the static partition which include
 Update your copy of "slurm.conf.j2.cloud.example" and define the proper node features with the openstack image name, key name, network name and security groups. Rerun the playbook to deploy your updated config.
 
 Now (hopefully) you should have a working slurm cluster with cloud scheduling support. Try to submit a job to one of the cloud partitions and monitor `/var/log/messages` and `/var/log/slurm/slurmctld.log` in the slurm master host.
-
-
-
-
-First copy file "
-
