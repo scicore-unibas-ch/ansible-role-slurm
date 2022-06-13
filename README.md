@@ -172,7 +172,7 @@ the OpenStack client, which is installed inside a virtualenv. The argument to th
 
 * Both "ResumeProgram" and "SuspendProgram" require an [OpenStack config file](https://docs.openstack.org/python-openstackclient/pike/configuration/index.html#configuration-files) with valid credentials. This file is by default populated to "/etc/openstack/clouds.yaml". It's recommeded to use an [OpenStack application credential](https://docs.openstack.org/keystone/queens/user/application_credentials.html). Check the template [templates/clouds.yaml.j2](templates/clouds.yaml.j2) to find the required ansible variables to populate this config file.
 
-* Both "ResumeProgram" and "SuspendProgram" will write logs to "/var/log/messages" . You can check this log for debugging purposes when booting cloud nodes.
+* Both "ResumeProgram" and "SuspendProgram" will write logs to "/var/log/messages" in the slurm master host. You can check this log for debugging purposes when booting cloud nodes.
 
 ## Recommended approach to deploy slurm with OpenStack cloud scheduling
 
