@@ -188,6 +188,8 @@ Populate your ansible inventory and add the machines to the right inventory grou
 
 Create a copy of "slurm.conf.j2.cloud.example", adapt it to your needs and point ansible var "slurm_conf_custom_template" to your config file. Your config file should provide a static partition which only includes the slurm worker machine we booted before. 
 
+Define ansible var `slurm_configless: true` so the compute nodes are configured in configless mode. When a slurm worker is configured in configless mode slurmd daemon will contact the slurm master on first boot and will download slurm.conf to `/var/run/slurm/conf/slurm.conf`
+
 Execute the role to configure all your machines and you should get a working slurm cluster with a single node in the static partition.
  
 Now you can run your custom playbooks or scripts to customize the slurm worker e.g. add NFS mounts, install LDAP client, enable software modules, install extra software..etc
