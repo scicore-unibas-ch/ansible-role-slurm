@@ -62,7 +62,7 @@
   when:
     - not slurm_config_git_repo is defined
     - not slurm_configless | bool
-  notify: restart slurm services
+  notify: Restart slurm services
 
 - name: Enable and start cgroup services if this is a RedHat/CentOS worker_node
   ansible.builtin.service:
@@ -95,7 +95,7 @@
   when:
     - not slurm_config_git_repo is defined
     - not slurm_configless
-  notify: restart slurm services
+  notify: Restart slurm services
 
 - name: Deploy the required configuration for slurm configless | RedHat
   ansible.builtin.template:
@@ -107,7 +107,7 @@
   when:
     - ansible_os_family == "RedHat"
     - slurm_configless | bool
-  notify: restart slurm services
+  notify: Restart slurm services
 
 - name: Deploy the required configuration for slurm configless | Debian/Ubuntu
   ansible.builtin.template:
@@ -119,7 +119,7 @@
   when:
     - ansible_os_family == "Debian"
     - slurm_configless | bool
-  notify: restart slurm services
+  notify: Restart slurm services
 
 - name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless
   ansible.builtin.file:

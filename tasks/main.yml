@@ -68,7 +68,7 @@
         dest: /etc/slurm/
         version: master
         force: true
-      notify: restart slurm services
+      notify: Restart slurm services
       environment:
         GIT_SSL_NO_VERIFY: "True"
 
@@ -112,7 +112,7 @@
   args:
     creates: /etc/munge/munge.key
   delegate_to: "{{ slurm_master_host }}"
-  notify: restart munge service
+  notify: Restart munge service
   no_log: true
   tags: munge
 
@@ -143,7 +143,7 @@
   when: ("slurm_dbd_host in inventory_hostname") or
         ("slurm_workers_group in group_names") or
         ("slurm_submit_group in group_names")
-  notify: restart munge service
+  notify: Restart munge service
   no_log: true
   tags: munge
 

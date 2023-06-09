@@ -67,7 +67,7 @@
   when:
     - not slurm_config_git_repo is defined
     - slurm_configless
-  notify: restart slurm services
+  notify: Restart slurm services
 
 - name: Deploy /etc/slurm/slurm_resume_openstack.py
   ansible.builtin.template:
@@ -77,7 +77,7 @@
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
   when: not slurm_config_git_repo is defined
-  notify: restart slurmctld service
+  notify: Restart slurmctld service
 
 - name: Deploy /etc/slurm/slurm_suspend_openstack.py
   ansible.builtin.template:
@@ -87,7 +87,7 @@
     group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
   when: not slurm_config_git_repo is defined
-  notify: restart slurmctld service
+  notify: Restart slurmctld service
 
 - name: Create folder /etc/openstack/ to deploy /etc/openstack/clouds.yaml
   ansible.builtin.file:
