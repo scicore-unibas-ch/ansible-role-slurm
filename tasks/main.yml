@@ -2,6 +2,10 @@
 # tasks file for ansible-role-slurm
 
 - name: Add all the slurm hosts to /etc/hosts
+  when:
+    - slurm_update_etc_hosts_file | bool
+    - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
+    - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
   block:
 
     - name: Add slurm master to /etc/hosts
@@ -40,10 +44,6 @@
           {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
-  when:
-    - slurm_update_etc_hosts_file | bool
-    - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
-    - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
 
 - name: Update apt cache on Debian/Ubuntu systems
   ansible.builtin.apt:
@@ -55,6 +55,7 @@
   changed_when: false
 
 - name: Download slurm config from git if "slurm_config_git_repo" is defined
+  when: slurm_config_git_repo is defined
   block:
 
     - name: Install git
@@ -71,8 +72,6 @@
       notify: Restart slurm services
       environment:
         GIT_SSL_NO_VERIFY: "True"
-
-  when: slurm_config_git_repo is defined
 
 - name: Install EPEL repository
   ansible.builtin.yum:

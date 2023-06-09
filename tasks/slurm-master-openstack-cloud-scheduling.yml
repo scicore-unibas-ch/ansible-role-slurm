@@ -1,6 +1,7 @@
 ---
 
 - name: RedHat | Create the python venv to install OpenStack client on RedHat systems
+  when: ansible_os_family == "RedHat"
   block:
 
     - name: RedHat | Install python3 and virtualenv from EPEL
@@ -30,10 +31,9 @@
         virtualenv: "{{ slurm_openstack_venv_path }}"
         virtualenv_command: virtualenv-3
 
-  when: ansible_os_family == "RedHat"
-
 
 - name: Debian/Ubuntu | Create the python venv to install OpenStack client on Debian/Ubuntu systems
+  when: ansible_os_family == "Debian"
   block:
 
     - name: Debian/Ubuntu | Install virtualenv
@@ -55,7 +55,6 @@
         virtualenv: "{{ slurm_openstack_venv_path }}"
         virtualenv_command: virtualenv
 
-  when: ansible_os_family == "Debian"
 
 - name: Deploy /etc/slurm/cgroup.conf to master if this is a configless setup
   ansible.builtin.template:

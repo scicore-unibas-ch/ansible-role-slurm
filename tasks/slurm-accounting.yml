@@ -118,6 +118,6 @@
 
 # if previous command return 0 lines it's because no cluster is registered
 # We assume that no other clusters are registered in this slurmdbd
-- name: Register the cluster in accounting db
+- name: Register the cluster in accounting db  # noqa no-changed-when
   ansible.builtin.command: sacctmgr add cluster {{ slurm_cluster_name }} --immediate
   when: _sacctmgr_output.stdout == "0"
