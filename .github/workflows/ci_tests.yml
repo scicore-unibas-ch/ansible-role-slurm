@@ -46,8 +46,8 @@ jobs:
       matrix:
         distro:
           - centos7
-          - centos8
           - ubuntu2004
+          #- centos8
           # - ubuntu1804
           # - debian10
           # - debian9
