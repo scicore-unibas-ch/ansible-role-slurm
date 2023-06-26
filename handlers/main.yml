@@ -13,14 +13,14 @@
   when: "slurm_dbd_host in inventory_hostname"
 
 - name: Restart slurmctld service
-  listen: restart slurm services
+  listen: Restart slurm services
   ansible.builtin.service:
     name: slurmctld
     state: restarted
   when: "slurm_master_host in inventory_hostname"
 
 - name: Restart slurmd service
-  listen: restart slurm services
+  listen: Restart slurm services
   ansible.builtin.service:
     name: slurmd
     state: restarted
