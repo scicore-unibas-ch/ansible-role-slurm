@@ -5,7 +5,7 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: ${MOLECULE_DISTRO:-centos7}
+  - name: instance
     image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:

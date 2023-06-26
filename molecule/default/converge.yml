@@ -22,6 +22,7 @@
 
   vars:
     slurm_master_host: "{{ inventory_hostname }}"
+    slurm_update_etc_hosts_file: false
 
   roles:
-    - role: ansible-role-slurm
+    - role: scicore.slurm
