@@ -1,16 +1,10 @@
 ---
 # tasks file for ansible-role-slurm
 
-- name: Print all available facts
-  ansible.builtin.debug:
-    var: ansible_facts
-
-- meta: end_play
-
 - name: Add all the slurm hosts to /etc/hosts
   when:
     - slurm_update_etc_hosts_file | bool
-    - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
+    - not '"docker" in virtualization_tech_guest'  # We cannot modify /etc/hosts in container
   block:
 
     - name: Add slurm master to /etc/hosts
