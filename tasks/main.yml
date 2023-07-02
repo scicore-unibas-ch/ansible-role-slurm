@@ -1,6 +1,12 @@
 ---
 # tasks file for ansible-role-slurm
 
+- name: Print all available facts
+  ansible.builtin.debug:
+    var: ansible_facts
+
+- meta: end_play
+
 - name: Add all the slurm hosts to /etc/hosts
   when:
     - slurm_update_etc_hosts_file | bool
