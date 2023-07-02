@@ -131,6 +131,7 @@
 
 - name: debugging
   ansible.builtin.command: sudo systemctl status slurmd
+  failed_when: false
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
