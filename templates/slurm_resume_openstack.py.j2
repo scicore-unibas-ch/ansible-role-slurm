@@ -197,10 +197,10 @@ def create_server(conn, name, image, flavor, network, keypair, security_groups):
     #logger.info(f"Node {name} has booted with ip {server_ip}")
     #return server, server_ip
 
-    # Try fix resource exhaustion issue when running multiple slurm cluster on same openstack cloud
-    # Check if VM is on error state after spawning. This means that slurm will set it down eventually,
-    # unless the VM is cleaned properly. Error state happens when hypervisors are fully allocated and a VM is requested by slurm.
-    # slurm cannot handle this and puts compute node to down state which needs to be manually resumed.
+    #try fix resource exhaustion issue when running multiple slurm cluster on same openstack cloud
+    #check if VM is on error state after spawning. This means that slurm will set it down eventually,
+    #unless the VM is cleaned properly. Error state happens when hypervisors are fully allocated and a VM is requested by slurm.
+    #slurm cannot handle this and puts compute node to down state which needs to be manually resumed.
     try:
       server = conn.compute.wait_for_server(server, wait=60)
     except ResourceFailure as e:
