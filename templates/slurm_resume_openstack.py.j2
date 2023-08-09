@@ -1,0 +1,201 @@
+#!{{ slurm_openstack_venv_path }}/bin/python3
+# -*- coding: utf-8 -*-
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+""" A Slurm ResumeProgram to create OpenStack instances.
+
+    Usage:
+
+        resume HOSTLIST_EXPRESSION [debug]
+
+    where:
+        HOSTLIST_EXPRESSION: Name(s) of node(s) to create, using Slurm's hostlist expression, as per [1].
+        debug: Any 2nd argument puts this in debug mode which is more verbose but does not actually create nodes.
+
+    Output and exceptions are written to the syslog. The OpenStack ID(s) of the created node(s) are written to hostname-named files in the Slurm control daemons spool directory [2].
+
+    The flavor, image, network, keypair and security groups to be used must be defined as node Features in slurm.conf [3]. e.g.
+    NodeName=compute-dynamic-[01-04] CPUs=4 RealMemory=7820 State=CLOUD Features=image=centos7,flavor=m1.large,keypair=key123,network=slurm_network,security_groups=default|slurm
+
+    OpenStack credentials must be available to this script (e.g. via an application credential in /etc/openstack/clouds.yaml readable by the slurm user)
+
+    The IP of new booted VMs is reported to slurm master by using "SlurmctldParameters=cloud_reg_addrs" in slurm.conf [4]
+
+    [1]: https://slurm.schedmd.com/slurm.conf.html#OPT_ResumeProgram
+    [2]: https://slurm.schedmd.com/slurm.conf.html#OPT_SlurmdSpoolDir
+    [3]: https://slurm.schedmd.com/slurm.conf.html#OPT_Features
+    [4]: https://slurm.schedmd.com/slurm.conf.html#OPT_cloud_reg_addrs
+
+"""
+
+import sys, os, subprocess, logging.handlers
+import openstack
+import pprint
+
+# configure logging to syslog - by default only "info" and above categories appear
+logger = logging.getLogger("syslogger")
+logger.setLevel(logging.DEBUG)
+handler = logging.handlers.SysLogHandler("/dev/log")
+handler.setFormatter(logging.Formatter(sys.argv[0] + ': %(message)s'))
+logger.addHandler(handler)
+
+# configure logging to custom file
+#import logging
+#logger = logging.getLogger(__name__)
+#logging.basicConfig(filename = '/var/log/slurm/slurm_dynamic.log', level = logging.INFO,
+#                        format = '%(asctime)s slurm_resume_openstack.py %(message)s',
+#                        datefmt = '%Y-%m-%d %H:%M:%S')
+
+
+def main():
+
+    debug = False
+    if len(sys.argv) > 2:
+        logger.info(f"Running in debug mode")
+        debug = True
+
+    hostlist_expr = sys.argv[1]  # argv[1] is list of nodes in slurm format e.g. compute[01-10]
+    logger.info(f"Slurmctld invoked resume node {hostlist_expr}")
+
+    try:
+        conn = openstack.connection.from_config()
+        logger.info(f"Got openstack connection {conn}")
+    except Exception as e:
+        logger.error(f"Error connecting to OpenStack API: {e}")
+
+    features = get_slurm_features(hostlist_expr)
+    logger.info(f"Features defined in slurm.conf for node(s) {hostlist_expr}: {features}")
+
+    statedir = get_statesavelocation()
+
+    new_nodes = expand_nodes(hostlist_expr)
+    for node in new_nodes:
+
+        if node not in features:
+            logger.error(f"No Feature definitions found for node {node}: {features}")
+
+        # Query the API for the defined node features to get all the details and to verify
+        # that they actually exist in OpenStack
+        os_parameters = {}
+
+        try:
+            os_parameters['image'] = conn.compute.find_image(features[node]['image'])
+        except Exception as e:
+            logger.error(f"Cannot find image: {e}")
+
+        try:
+            os_parameters['flavor'] = conn.compute.find_flavor(features[node]['flavor'])
+        except Exception as e:
+            logger.error(f"Cannot find flavor: {e}")
+
+        try:
+            os_parameters['network'] = conn.network.find_network(features[node]['network'])
+        except Exception as e:
+            logger.error(f"Cannot find network: {e}")
+
+        try:
+            os_parameters['keypair'] = conn.compute.find_keypair(features[node]['keypair']),
+        except Exception as e:
+            logger.error(f"Cannot find keypair: {e}")
+
+        # create_server() expects security groups as a list of dicts in format
+        # [{'name': 'security_group_name'}, {name: 'another_security_group_name'}]
+        sec_groups_list = []
+        for s in features[node]['security_groups'].split('|'):
+            try:
+                sec_group_details = conn.network.find_security_group(s)
+            except Exception as e:
+                logger.error(f"Cannot find security group: {e}")
+            sec_groups_list.append({'name': sec_group_details.name})
+        os_parameters['security_groups'] = sec_groups_list
+
+        if debug:
+            logger.info(f"os_parameters for {node} : {os_parameters}")
+        if not debug:
+            logger.info(f"Creating slurm node {node}")
+            server = create_server(conn, node, **os_parameters)
+            with open(os.path.join(statedir, node), 'w') as f:
+                f.write(server.id)
+            # updating the node ip using scontrol is not needed when using "SlurmctldParameters=cloud_reg_addrs"
+            #scontrol = subprocess.run(['scontrol', 'update', 'nodename=' + node, 'nodeaddr=' + server_ip], stdout=subprocess.PIPE, universal_newlines=True)
+            # Don't need scontrol update nodename={node} nodeaddr={server_ip} when using SlurmctldParameters=cloud_dns
+
+def get_statesavelocation():
+    """ Return the path for Slurm's StateSaveLocation """
+    scontrol = subprocess.run(['scontrol', 'show', 'config'], stdout=subprocess.PIPE, universal_newlines=True)
+    for line in scontrol.stdout.splitlines():
+        if line.startswith('StateSaveLocation'): # StateSaveLocation       = /var/spool/slurm
+            return line.split()[-1]
+
+def expand_nodes(hostlist_expr):
+    """ Convert slurm hosts list expression like compute[01-03] to a list of nodes.
+        Returns a list like ['compute01', 'compute02', 'compute03']
+    """
+    scontrol = subprocess.run(['scontrol', 'show', 'hostnames', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
+    return scontrol.stdout.strip().split('\n')
+
+def get_slurm_features(hostlist_expr):
+    """ Retrieve the features specified slurm.conf for given node(s).
+
+        Input is a list of nodes in slurm format. e.g. compute[01-10]
+
+        Returns a dict of dicts. Keys for main dict are node names. Keys for nested dicts are feature=value
+    """
+
+    scontrol = subprocess.run(['scontrol', 'show', 'node', hostlist_expr], stdout=subprocess.PIPE, universal_newlines=True)
+    features_all_nodes = {}
+    for line in scontrol.stdout.splitlines():
+        line = line.strip()
+        if line.startswith('NodeName'): # NodeName=dev-small-cloud-1 CoresPerSocket=1
+            node = line.split()[0].split('=')[1]
+        if line.startswith('AvailableFeatures'):
+            node_features = {}
+            all_features_from_slurm_conf = line.split('=', 1)[1]
+            for f in all_features_from_slurm_conf.split(','):  # Features from slurm.conf like "image=compute_image,flavor=m1.large,keypair=my_key"
+                single_feature = f.split('=')
+                feature_name = single_feature[0]  # e.g. feature name: image
+                feature_value = single_feature[1] # e.g. feature value: compute_image
+                node_features[feature_name] = feature_value
+            features_all_nodes[node] = node_features
+
+    return features_all_nodes
+
+def create_server(conn, name, image, flavor, network, keypair, security_groups):
+    """ Create a server based on the features defined in slurm.conf
+
+        Every input argument is an openstack object excepting "name" and "security_groups"
+
+        security_groups is a list of dicts in format [{'name': 'security_group_name'}, {name: 'another_security_group_name'}]
+
+        Returns a server object
+    """
+    try:
+        server = conn.compute.create_server(
+            name=name, image_id=image.id, flavor_id=flavor.id,
+            networks=[{"uuid": network.id}], key_name=keypair[0].name, security_groups=security_groups,
+        )
+    except Exception as e:
+        logger.error(f"Error booting VM: {e}")
+
+    # we don't need to wait of the server if we use "SlurmctldParameters=cloud_reg_addrs" in slurm.conf
+    #server = conn.compute.wait_for_server(server) # wait for node to boot so it gets an IP
+    #server_ip = list(server.addresses.values())[0][0]['addr']
+    #server_ip = next(conn.compute.server_ips(server)).address  # conn.compute.server_ips() returns an iterator. Use next() to get first element
+    #logger.info(f"Node {name} has booted with ip {server_ip}")
+    #return server, server_ip
+
+    return server
+
+if __name__ == '__main__':
+    main()

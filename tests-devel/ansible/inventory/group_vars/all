@@ -1,0 +1,5 @@
+---
+
+slurm_update_etc_hosts_file: false  # in vagrant tests to deploy a hardcoded /etc/hosts
+
+slurm_master_host: master  # this is the hostname of slurm master in vagrant tests

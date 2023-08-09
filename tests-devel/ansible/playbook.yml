@@ -1,0 +1,26 @@
+---
+
+- name: Deploy slurm
+  hosts: all
+  remote_user: vagrant
+  become: true
+
+  tasks:
+
+    - name: Configure NTP time
+      ansible.builtin.import_role:
+        name: geerlingguy.ntp
+
+    - name: Deploy hardcoded /etc/hosts for Vagrant tests
+      ansible.builtin.blockinfile:
+        dest: /etc/hosts
+        marker_begin: "BEGIN slurm hosts"
+        marker_end: "END slurm hosts"
+        block: |
+          192.168.56.100 master
+          192.168.56.101 submit
+          192.168.56.102 compute
+
+    - name: Deploy a slurm cluster
+      ansible.builtin.import_role:
+        name: scicore.slurm

@@ -2,6 +2,9 @@
 # tasks file for ansible-role-slurm
 
 - name: Add all the slurm hosts to /etc/hosts
+  when:
+    - slurm_update_etc_hosts_file | bool
+    - not '"docker" in virtualization_tech_guest'  # We cannot modify /etc/hosts in container
   block:
 
     - name: Add slurm master to /etc/hosts
@@ -40,13 +43,18 @@
           {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
-  when:
-    - slurm_update_etc_hosts_file
-    - not ansible_virtualization_type == "docker"       # we cannot modify /etc/hosts in container
-    - not ansible_virtualization_type == "containerd"   # we cannot modify /etc/hosts in container
 
+- name: Update apt cache on Debian/Ubuntu systems
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 600
+  when:
+    - ansible_os_family == 'Debian'
+    - slurm_update_apt_cache
+  changed_when: false
 
 - name: Download slurm config from git if "slurm_config_git_repo" is defined
+  when: slurm_config_git_repo is defined
   block:
 
     - name: Install git
@@ -60,18 +68,16 @@
         dest: /etc/slurm/
         version: master
         force: true
-      notify: restart slurm services
+      notify: Restart slurm services
       environment:
         GIT_SSL_NO_VERIFY: "True"
-
-  when: slurm_config_git_repo is defined
 
 - name: Install EPEL repository
   ansible.builtin.yum:
     name: epel-release
     state: installed
   when:
-    - slurm_add_epel_repo
+    - slurm_add_epel_repo | bool
     - ansible_os_family == "RedHat"
 
 - name: Install OpenHPC repositories (RHEL7)
@@ -79,7 +85,7 @@
     name: "{{ slurm_ohpc_repos_url['rhel7'] }}"
     state: installed
   when:
-    - slurm_add_openhpc_repo
+    - slurm_add_openhpc_repo | bool
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == "7"
 
@@ -89,7 +95,7 @@
     state: installed
     disable_gpg_check: true
   when:
-    - slurm_add_openhpc_repo
+    - slurm_add_openhpc_repo | bool
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == "8"
 
@@ -104,7 +110,7 @@
   args:
     creates: /etc/munge/munge.key
   delegate_to: "{{ slurm_master_host }}"
-  notify: restart munge service
+  notify: Restart munge service
   no_log: true
   tags: munge
 
@@ -135,7 +141,7 @@
   when: ("slurm_dbd_host in inventory_hostname") or
         ("slurm_workers_group in group_names") or
         ("slurm_submit_group in group_names")
-  notify: restart munge service
+  notify: Restart munge service
   no_log: true
   tags: munge
 
@@ -145,34 +151,6 @@
     state: started
     enabled: true
   tags: munge
-
-- name: Create /etc/slurm in RedHat based systems
-  ansible.builtin.file:
-    path: /etc/slurm
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  when: ansible_os_family == "RedHat"
-
-- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /etc/slurm-llnl
-    dest: /etc/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
-
-- name: Deploy /etc/slurm/slurm.conf
-  ansible.builtin.template:
-    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
-    dest: /etc/slurm/slurm.conf
-    owner: root
-    group: root
-    mode: 0644
-  when: not slurm_config_git_repo is defined
-  notify: restart slurm services
 
 - name: Configure slurm accounting daemon
   ansible.builtin.include_tasks: slurm-accounting.yml
@@ -185,3 +163,9 @@
 - name: Configure slurm workers
   ansible.builtin.include_tasks: slurm-worker.yml
   when: "slurm_workers_group in group_names"
+
+- name: Configure slurm submit hosts
+  ansible.builtin.include_tasks: slurm-submit.yml
+  when:
+    - "slurm_submit_group in group_names"
+    - "not slurm_workers_group in group_names"

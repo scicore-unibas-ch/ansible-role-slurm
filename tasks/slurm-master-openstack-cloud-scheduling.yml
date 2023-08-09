@@ -1,0 +1,122 @@
+---
+
+- name: RedHat | Create the python venv to install OpenStack client on RedHat systems
+  when: ansible_os_family == "RedHat"
+  block:
+
+    - name: RedHat | Install python3 and virtualenv from EPEL
+      ansible.builtin.yum:
+        name:
+          - python3
+          - python3-pip
+          - python3-virtualenv
+        state: installed
+
+    - name: RedHat | Install python2-setuptools required by the ansible pip module
+      ansible.builtin.yum:
+        name: python-setuptools
+        state: installed
+
+    - name: RedHat | Create python virtualenv and upgrade pip and setuptools
+      ansible.builtin.pip:
+        name:
+          - setuptools>46.1.3
+          - pip>20.0.2
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv-3
+
+    - name: RedHat | Install openstacksdk <= 1.2.0 if this is centos7
+      ansible.builtin.pip:
+        name: "openstacksdk<=1.2.0"
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv-3
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == "7"
+
+    - name: RedHat | Install the openstack client in the python virtualenv
+      ansible.builtin.pip:
+        name: python-openstackclient
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv-3
+
+
+- name: Debian/Ubuntu | Create the python venv to install OpenStack client on Debian/Ubuntu systems
+  when: ansible_os_family == "Debian"
+  block:
+
+    - name: Debian/Ubuntu | Install virtualenv
+      ansible.builtin.apt:
+        name: python3-virtualenv
+        state: present
+
+    - name: Debian/Ubuntu | Create python virtualenv and upgrade pip and setuptools
+      ansible.builtin.pip:
+        name:
+          - setuptools>46.1.3
+          - pip>20.0.2
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv
+
+    - name: Debian/Ubuntu | Install the openstack client in the python virtualenv
+      ansible.builtin.pip:
+        name: python-openstackclient
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv
+
+
+- name: Deploy /etc/slurm/cgroup.conf to master if this is a configless setup
+  ansible.builtin.template:
+    src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
+    dest: /etc/slurm/cgroup.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when:
+    - not slurm_config_git_repo is defined
+    - slurm_configless
+  notify: Restart slurm services
+
+- name: Deploy /etc/slurm/slurm_resume_openstack.py
+  ansible.builtin.template:
+    src: slurm_resume_openstack.py.j2
+    dest: /etc/slurm/slurm_resume_openstack.py
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0755
+  when: not slurm_config_git_repo is defined
+  notify: Restart slurmctld service
+
+- name: Deploy /etc/slurm/slurm_suspend_openstack.py
+  ansible.builtin.template:
+    src: slurm_suspend_openstack.py.j2
+    dest: /etc/slurm/slurm_suspend_openstack.py
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0755
+  when: not slurm_config_git_repo is defined
+  notify: Restart slurmctld service
+
+- name: Create folder /etc/openstack/ to deploy /etc/openstack/clouds.yaml
+  ansible.builtin.file:
+    path: /etc/openstack/
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: Deploy /etc/openstack/clouds.yaml
+  ansible.builtin.template:
+    src: clouds.yaml.j2
+    dest: /etc/openstack/clouds.yaml
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0600
+
+# This requires a working /etc/openstack/clouds.yaml deployed in previous task
+# This keypair name is later used as a "feature" for the compute nodes in slurm.conf
+# - name: Register ssh public key in the openstack api
+#   openstack.cloud.keypair:
+#     name: "{{ slurm_openstack_ssh_keypair_name }}"
+#     public_key: "{{ slurm_openstack_ssh_public_key }}"
+#     state: present

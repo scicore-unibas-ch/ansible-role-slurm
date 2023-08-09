@@ -1,0 +1,95 @@
+---
+
+# This playbook requires that you have created an application credential for the slurm master in this tenant
+# and the application credential is added to the ansible vault
+
+- name: Create an OpenStack image to be used for slurm dynamic compute nodes
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars_prompt:
+
+    - name: tenant_name
+      prompt: Tenant name?
+      private: false
+
+    - name: server_id
+      prompt: Server ID to snapshot?
+      private: false
+
+  tasks:
+
+    - name: Make sure we are not authenticated with OpenStack
+      fail:
+        msg: "You must execute this playbook without OpenStack credentials in your environment"
+      when: "lookup('env', 'OS_AUTH_URL')"
+
+    - name: Import vault.yml if it exists. This requires a valid vault password
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ playbook_dir }}/vault.yml"
+          skip: true
+      no_log: true
+      tags: always
+
+    - name: Import group vars for this tenant from inventory/group_vars/tenant_{{ tenant_name }}
+      ansible.builtin.include_vars:
+        file: "inventory/group_vars/tenant_{{ tenant_name }}"
+
+    - name: Gather information about compute image to check if it already exists
+      openstack.cloud.image_info:
+        auth_type: v3applicationcredential
+        auth:
+          auth_url: "{{ slurm_openstack_auth_url }}"
+          application_credential_id: "{{ slurm_openstack_application_credential_id }}"
+          application_credential_secret: "{{ slurm_openstack_application_credential_secret }}"
+        image: "{{ local_slurm_compute_image_name }}"
+      delegate_to: localhost
+      become: false
+      no_log: true
+      register: result
+
+    - name: Exit if the image already exists
+      block:
+
+        - name: Print exit message
+          ansible.builtin.debug:
+            msg: "The image already exists. EXITING NOW"
+
+        - name: Exit playbook
+          ansible.builtin.meta: end_play
+
+      when: result.openstack_image
+
+    - name: Stop the server before creating the image
+      openstack.cloud.server_action:
+        auth_type: v3applicationcredential
+        auth:
+          auth_url: "{{ slurm_openstack_auth_url }}"
+          application_credential_id: "{{ slurm_openstack_application_credential_id }}"
+          application_credential_secret: "{{ slurm_openstack_application_credential_secret }}"
+        server: "{{ server_id }}"
+        action: stop
+        timeout: 200
+      no_log: true
+
+    # We have to use the openstack cli because there is no ansible module to create an image from a server
+    # https://groups.google.com/g/Ansible-project/c/rqE0h8qWqOE
+    - name: Create the compute node image
+      ansible.builtin.command: openstack server image create --name tenant-{{ local_tenant_name }}-slurm-compute-node {{ server_id }} --os-auth-url={{ slurm_openstack_auth_url }} --os-application-credential-id={{ slurm_openstack_application_credential_id }} --os-application-credential-secret={{ slurm_openstack_application_credential_secret }} --os-auth-type=v3applicationcredential --wait
+      no_log: true
+
+    - name: Start the server after the image has been created
+      openstack.cloud.server_action:
+        auth_type: v3applicationcredential
+        auth:
+          auth_url: "{{ slurm_openstack_auth_url }}"
+          application_credential_id: "{{ slurm_openstack_application_credential_id }}"
+          application_credential_secret: "{{ slurm_openstack_application_credential_secret }}"
+        server: "{{ server_id }}"
+        action: start
+        timeout: 200
+      no_log: true

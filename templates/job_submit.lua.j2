@@ -4,14 +4,14 @@ require = string
 
 function slurm_job_submit(job_desc, part_list, submit_uid)
     local getent_answer, username, rc
-    f = io.popen("getent passwd " .. submit_uid)
+    f = io.popen("getent passwd " .. submit_uid .. "| awk -F ':' {'print $1'}")
     getent_answer = f:read()
     f:close()
     if not getent_answer then
         slurm.log_error("failed to lookup uid " .. submit_uid)
         return slurm.FAILURE
     end
-    username = string.match(getent_answer, "^(%w+):")
+    username = getent_answer
     f = io.popen("sacctmgr show -n user " .. username)
     if not f:read() then
         rc = os.execute("sacctmgr add -i user " .. username ..

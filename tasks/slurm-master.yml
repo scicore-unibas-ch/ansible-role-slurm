@@ -5,13 +5,23 @@
     name: "{{ slurm_packages_master[ansible_os_family] }}"
     state: present
 
-- name: Ensure the slurmctld spool directory exists
+- name: Create /etc/slurm in RedHat based systems
   ansible.builtin.file:
-    path: "{{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}"
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    path: /etc/slurm
+    owner: root
+    group: root
     mode: 0755
     state: directory
+  when: ansible_os_family == "RedHat"
+
+- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
+  ansible.builtin.file:
+    src: /etc/slurm-llnl
+    dest: /etc/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
 
 - name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
   ansible.builtin.file:
@@ -22,16 +32,38 @@
     state: link
   when: ansible_os_family == "Debian"
 
+- name: Ensure the slurmctld spool directory exists
+  ansible.builtin.file:
+    path: "{{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}"
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0755
+    state: directory
+
+- name: Deploy /etc/slurm/slurm.conf
+  ansible.builtin.template:
+    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
+    dest: /etc/slurm/slurm.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when: not slurm_config_git_repo is defined
+  notify: Restart slurm services
+
 - name: Deploy /etc/slurm/job_submit.lua
   ansible.builtin.template:
     src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
     dest: /etc/slurm/job_submit.lua
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0755
   when:
-    - slurm_config_deploy_lua_submit_plugin
+    - slurm_config_deploy_lua_submit_plugin | bool
     - not slurm_config_git_repo is defined
+
+- name: Custom slurm master setup for OpenStack cloud scheduling
+  ansible.builtin.import_tasks: slurm-master-openstack-cloud-scheduling.yml
+  when: slurm_openstack_cloud_scheduling | bool
 
 - name: Start and enable slurm master daemon
   ansible.builtin.service:

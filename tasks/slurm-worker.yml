@@ -1,5 +1,41 @@
 ---
 
+- name: Install slurm worker packages
+  ansible.builtin.package:
+    name: "{{ slurm_packages_worker[ansible_os_family] }}"
+    state: present
+
+- name: Create /etc/slurm in RedHat based systems
+  ansible.builtin.file:
+    path: /etc/slurm
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  when:
+    - ansible_os_family == "RedHat"
+    - not slurm_configless | bool
+
+- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
+  ansible.builtin.file:
+    src: /etc/slurm-llnl
+    dest: /etc/slurm
+    owner: root
+    group: root
+    state: link
+  when:
+    - ansible_os_family == "Debian"
+    - not slurm_configless | bool
+
+- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
+  ansible.builtin.file:
+    src: /var/log/slurm-llnl
+    dest: /var/log/slurm
+    owner: root
+    group: root
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Install cgroups if this is a worker host | RedHat
   ansible.builtin.yum:
     name:
@@ -20,28 +56,25 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
     dest: /etc/slurm/cgroup.conf
-    owner: root
-    group: root
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
     mode: 0644
-  when: not slurm_config_git_repo is defined
-  notify: restart slurm services
+  when:
+    - not slurm_config_git_repo is defined
+    - not slurm_configless | bool
+  notify: Restart slurm services
 
-- name: Enable and start cgroup services if this is a worker_node
+- name: Enable and start cgroup services if this is a RedHat/CentOS worker_node
   ansible.builtin.service:
     name: "{{ item }}"
     enabled: true
     state: started
   when:
-    - not ansible_virtualization_type == "docker"
-    - not ansible_virtualization_type == "containerd"
+    - ansible_os_family == "RedHat"
+    - not '"docker" in virtualization_tech_guest'  # skip in github actions CI
   with_items:
     - cgred
     - cgconfig
-
-- name: Install slurm worker packages
-  ansible.builtin.package:
-    name: "{{ slurm_packages_worker[ansible_os_family] }}"
-    state: present
 
 - name: Ensure the slurmd spool directory exists
   ansible.builtin.file:
@@ -51,14 +84,59 @@
     mode: 0755
     state: directory
 
-- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /var/log/slurm-llnl
-    dest: /var/log/slurm
+- name: Deploy /etc/slurm/slurm.conf
+  ansible.builtin.template:
+    src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
+    dest: /etc/slurm/slurm.conf
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0644
+  when:
+    - not slurm_config_git_repo is defined
+    - not slurm_configless
+  notify: Restart slurm services
+
+- name: Deploy the required configuration for slurm configless | RedHat
+  ansible.builtin.template:
+    src: slurm_worker_configless.j2
+    dest: /etc/sysconfig/slurmd
     owner: root
     group: root
-    state: link
-  when: ansible_os_family == "Debian"
+    mode: 0644
+  when:
+    - ansible_os_family == "RedHat"
+    - slurm_configless | bool
+  notify: Restart slurm services
+
+- name: Deploy the required configuration for slurm configless | Debian/Ubuntu
+  ansible.builtin.template:
+    src: slurm_worker_configless.j2
+    dest: /etc/default/slurmd
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ansible_os_family == "Debian"
+    - slurm_configless | bool
+  notify: Restart slurm services
+
+- name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/slurm
+    - /etc/slurm-llnl
+  when: slurm_configless | bool
+
+- name: debugging
+  ansible.builtin.command: sudo systemctl status slurmd
+  register: result
+  failed_when: false
+
+- name: debugging. Print slurmd status
+  ansible.builtin.debug:
+    var: result
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:

@@ -1,19 +1,16 @@
 ---
-
-name: "CI tests"
-
-on:
+name: CI
+'on':
   pull_request:
   push:
-  release:
-    types:
-      - published
+    branches:
+      - master
   schedule:
     - cron: "0 7 * * 0"
 
 defaults:
   run:
-    working-directory: 'ansible-role-slurm'
+    working-directory: 'scicore.slurm'
 
 jobs:
 
@@ -24,7 +21,7 @@ jobs:
       - name: Check out the codebase.
         uses: actions/checkout@v2
         with:
-          path: 'ansible-role-slurm'
+          path: 'scicore.slurm'
 
       - name: Set up Python 3.
         uses: actions/setup-python@v2
@@ -32,12 +29,11 @@ jobs:
           python-version: '3.x'
 
       - name: Install test dependencies.
-        run: pip3 install yamllint ansible-lint ansible
+        run: pip3 install yamllint
 
       - name: Lint code.
         run: |
           yamllint .
-          ansible-lint .
 
   molecule:
     name: Molecule
@@ -45,19 +41,14 @@ jobs:
     strategy:
       matrix:
         distro:
-          - centos7
-          - centos8
+          #- rockylinux8
           - ubuntu2004
-          # - ubuntu1804
-          # - debian10
-          # - debian9
-          # - fedora34
 
     steps:
       - name: Check out the codebase.
         uses: actions/checkout@v2
         with:
-          path: 'ansible-role-slurm'
+          path: 'scicore.slurm'
 
       - name: Set up Python 3.
         uses: actions/setup-python@v2
@@ -65,15 +56,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install test dependencies.
-        run: pip3 install ansible molecule[docker] docker
-
-      - name: disable apparmor on ubuntu systems
-        run: |
-            set -x
-            sudo apt-get install apparmor-profiles
-            sudo ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/
-            sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
-        if: ${{ startsWith(matrix.distro, 'ubuntu') }}
+        run: pip3 install ansible molecule molecule-plugins[docker] docker
 
       - name: Run Molecule tests.
         run: molecule test
@@ -81,15 +64,3 @@ jobs:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
           MOLECULE_DISTRO: ${{ matrix.distro }}
-
-  release:
-    name: Release to galaxy
-    needs:
-      - lint
-      - molecule
-    runs-on: ubuntu-latest
-    steps:
-      - name: galaxy
-        uses: robertdebock/galaxy-action@1.1.0
-        with:
-          galaxy_api_key: ${{ secrets.galaxy_api_key }}

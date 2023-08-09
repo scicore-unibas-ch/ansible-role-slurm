@@ -1,27 +1,27 @@
 ---
 # handlers file for ansible-role-slurm
 
-- name: restart munge service
+- name: Restart munge service
   ansible.builtin.service:
     name: munge
     state: restarted
 
-- name: restart slurmdbd service
-  service:
+- name: Restart slurmdbd service
+  ansible.builtin.service:
     name: slurmdbd
     state: restarted
   when: "slurm_dbd_host in inventory_hostname"
 
-- name: restart slurmctld service
-  listen: restart slurm services
-  service:
+- name: Restart slurmctld service
+  listen: Restart slurm services
+  ansible.builtin.service:
     name: slurmctld
     state: restarted
   when: "slurm_master_host in inventory_hostname"
 
-- name: restart slurmd service
-  listen: restart slurm services
-  service:
+- name: Restart slurmd service
+  listen: Restart slurm services
+  ansible.builtin.service:
     name: slurmd
     state: restarted
   when: "slurm_workers_group in group_names"
