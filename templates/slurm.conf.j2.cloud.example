@@ -93,7 +93,7 @@ CheckpointType=checkpoint/none
 #JobCheckpointDir=/var/lib/slurm/checkpoint
 
 # requeue jobs on node failure, unless users ask otherwise
-JobRequeue=0
+JobRequeue=1
 
 # max number of jobs in a job array
 MaxArraySize=150000
