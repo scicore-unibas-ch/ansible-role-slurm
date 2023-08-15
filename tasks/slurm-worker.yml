@@ -129,15 +129,6 @@
     - /etc/slurm-llnl
   when: slurm_configless | bool
 
-- name: debugging
-  ansible.builtin.command: sudo systemctl status slurmd
-  register: result
-  failed_when: false
-
-- name: debugging. Print slurmd status
-  ansible.builtin.debug:
-    var: result
-
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
     name: slurmd
