@@ -42,6 +42,8 @@
 import sys, os, subprocess, logging.handlers
 import openstack
 import pprint
+import time
+from openstack.exceptions import ResourceFailure
 
 # configure logging to syslog - by default only "info" and above categories appear
 logger = logging.getLogger("syslogger")
@@ -194,6 +196,19 @@ def create_server(conn, name, image, flavor, network, keypair, security_groups):
     #server_ip = next(conn.compute.server_ips(server)).address  # conn.compute.server_ips() returns an iterator. Use next() to get first element
     #logger.info(f"Node {name} has booted with ip {server_ip}")
     #return server, server_ip
+
+    #try fix resource exhaustion issue when running multiple slurm cluster on same openstack cloud
+    #check if VM is on error state after spawning. This means that slurm will set it down eventually,
+    #unless the VM is cleaned properly. Error state happens when hypervisors are fully allocated and a VM is requested by slurm.
+    #slurm cannot handle this and puts compute node to down state which needs to be manually resumed.
+    try:
+      server = conn.compute.wait_for_server(server, wait=60)
+    except ResourceFailure as e:
+        logger.error(f"Instance failed to spawn with exception {e}")
+        conn.compute.delete_server(server)
+        logger.error(f"Deleted server in error state: {server.id}")
+    except Exception as e:
+        logger.error(f"Server deletion failed. {e}")
 
     return server
 
