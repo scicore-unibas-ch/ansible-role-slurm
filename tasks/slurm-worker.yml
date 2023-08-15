@@ -71,8 +71,7 @@
     state: started
   when:
     - ansible_os_family == "RedHat"
-    - not ansible_virtualization_type == "docker"
-    - not ansible_virtualization_type == "containerd"
+    - not '"docker" in virtualization_tech_guest'  # skip in github actions CI
   with_items:
     - cgred
     - cgconfig
@@ -129,6 +128,15 @@
     - /etc/slurm
     - /etc/slurm-llnl
   when: slurm_configless | bool
+
+- name: debugging
+  ansible.builtin.command: sudo systemctl status slurmd
+  register: result
+  failed_when: false
+
+- name: debugging. Print slurmd status
+  ansible.builtin.debug:
+    var: result
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:

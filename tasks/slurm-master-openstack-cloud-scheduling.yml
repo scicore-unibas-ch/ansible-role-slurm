@@ -25,6 +25,15 @@
         virtualenv: "{{ slurm_openstack_venv_path }}"
         virtualenv_command: virtualenv-3
 
+    - name: RedHat | Install openstacksdk <= 1.2.0 if this is centos7
+      ansible.builtin.pip:
+        name: "openstacksdk<=1.2.0"
+        virtualenv: "{{ slurm_openstack_venv_path }}"
+        virtualenv_command: virtualenv-3
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == "7"
+
     - name: RedHat | Install the openstack client in the python virtualenv
       ansible.builtin.pip:
         name: python-openstackclient
