@@ -209,6 +209,7 @@ DefMemPerCPU=1800
 #TreeWidth=10000
 PrivateData=cloud  # Powered down nodes in the cloud are visible
 ResumeProgram=/etc/slurm/slurm_resume_openstack.py
+ResumeFailProgram=/etc/slurm/slurm_resume_fail.sh
 SuspendProgram=/etc/slurm/slurm_suspend_openstack.py
 ResumeRate=2  #number of nodes per minute that can be created; 0 means no limit
 ResumeTimeout=300  #max time in seconds between ResumeProgram running and when the node is ready for use

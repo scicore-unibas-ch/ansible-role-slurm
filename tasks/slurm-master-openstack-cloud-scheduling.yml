@@ -97,6 +97,16 @@
   when: not slurm_config_git_repo is defined
   notify: Restart slurmctld service
 
+- name: Deploy /etc/slurm/slurm_resume_fail.sh
+  ansible.builtin.template:
+    src: slurm_resume_fail.sh
+    dest: /etc/slurm/slurm_resume_fail.sh
+    owner: "{{ slurm_user[ansible_os_family] }}"
+    group: "{{ slurm_group[ansible_os_family] }}"
+    mode: 0755
+  when: not slurm_config_git_repo is defined
+  notify: Restart slurmctld service
+
 - name: Create folder /etc/openstack/ to deploy /etc/openstack/clouds.yaml
   ansible.builtin.file:
     path: /etc/openstack/
