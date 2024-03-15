@@ -2,85 +2,34 @@
 
 - name: Install slurm worker packages
   ansible.builtin.package:
-    name: "{{ slurm_packages_worker[ansible_os_family] }}"
+    name: "{{ slurm_packages_worker }}"
     state: present
+    cache_valid_time: 600
 
-- name: Create /etc/slurm in RedHat based systems
-  ansible.builtin.file:
-    path: /etc/slurm
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  when:
-    - ansible_os_family == "RedHat"
-    - not slurm_configless | bool
-
-- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /etc/slurm-llnl
-    dest: /etc/slurm
-    owner: root
-    group: root
-    state: link
-  when:
-    - ansible_os_family == "Debian"
-    - not slurm_configless | bool
-
-- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /var/log/slurm-llnl
-    dest: /var/log/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
-
-- name: Install cgroups if this is a worker host | RedHat
-  ansible.builtin.yum:
-    name:
-      - libcgroup
-      - libcgroup-tools
-    state: present
-  when: ansible_os_family == "RedHat"
-
-- name: Install cgroups if this is a worker host | Debian
+- name: Install cgroups if this is a worker host
   ansible.builtin.apt:
     name:
       - libcgroup1
       - cgroup-tools
     state: present
-  when: ansible_os_family == "Debian"
 
 - name: Deploy /etc/slurm/cgroup.conf
   ansible.builtin.template:
     src: "{{ slurm_conf_cgroup_custom_template | default('cgroup.conf.j2') }}"
     dest: /etc/slurm/cgroup.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0644
   when:
     - not slurm_config_git_repo is defined
     - not slurm_configless | bool
   notify: Restart slurm services
 
-- name: Enable and start cgroup services if this is a RedHat/CentOS worker_node
-  ansible.builtin.service:
-    name: "{{ item }}"
-    enabled: true
-    state: started
-  when:
-    - ansible_os_family == "RedHat"
-    - not '"docker" in virtualization_tech_guest'  # skip in github actions CI
-  with_items:
-    - cgred
-    - cgconfig
-
 - name: Ensure the slurmd spool directory exists
   ansible.builtin.file:
     path: "{{ slurm_slurmd_spool_path | default('/var/spool/slurmd') }}"
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0755
     state: directory
 
@@ -88,36 +37,22 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0644
   when:
     - not slurm_config_git_repo is defined
     - not slurm_configless
   notify: Restart slurm services
 
-- name: Deploy the required configuration for slurm configless | RedHat
-  ansible.builtin.template:
-    src: slurm_worker_configless.j2
-    dest: /etc/sysconfig/slurmd
-    owner: root
-    group: root
-    mode: 0644
-  when:
-    - ansible_os_family == "RedHat"
-    - slurm_configless | bool
-  notify: Restart slurm services
-
-- name: Deploy the required configuration for slurm configless | Debian/Ubuntu
+- name: Deploy the required configuration for slurm configless
   ansible.builtin.template:
     src: slurm_worker_configless.j2
     dest: /etc/default/slurmd
     owner: root
     group: root
     mode: 0644
-  when:
-    - ansible_os_family == "Debian"
-    - slurm_configless | bool
+  when: slurm_configless | bool
   notify: Restart slurm services
 
 - name: Delete /etc/slurm and /etc/slurm-llnl when using slurm configless

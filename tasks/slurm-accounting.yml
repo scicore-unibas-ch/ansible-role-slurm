@@ -2,42 +2,15 @@
 
 - name: Install slurm accounting daemon and dependencies
   ansible.builtin.package:
-    name: "{{ slurm_packages_slurmdbd[ansible_os_family] }}"
+    name: "{{ slurm_packages_slurmdbd }}"
     state: present
-
-- name: Create /etc/slurm in RedHat based systems
-  ansible.builtin.file:
-    path: /etc/slurm
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  when: ansible_os_family == "RedHat"
-
-- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /etc/slurm-llnl
-    dest: /etc/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
-
-- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /var/log/slurm-llnl
-    dest: /var/log/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
 
 - name: Deploy /etc/slurm/slurm.conf
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0644
   when: not slurm_config_git_repo is defined
   notify: Restart slurm services
@@ -48,27 +21,11 @@
     state: started
     enabled: true
 
-- name: Install dependencies for the ansible mysql modules | RedHat7
-  ansible.builtin.yum:
-    name: MySQL-python
-    state: present
-  when:
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == "7"
-
-- name: Install dependencies for the ansible mysql modules | RedHat8
-  ansible.builtin.yum:
-    name: python3-mysql
-    state: present
-  when:
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == "8"
-
-- name: Install dependencies for the ansible mysql modules | Debian/Ubuntu
+- name: Install dependencies for the ansible mysql modules
   ansible.builtin.apt:
     name: python3-mysqldb
     state: present
-  when: ansible_os_family == "Debian"
+    cache_valid_time: 600
 
 - name: Create mysql db for accounting
   community.mysql.mysql_db:
@@ -87,8 +44,8 @@
   ansible.builtin.template:
     src: "{{ slurmdbd_conf_custom_template | default('slurmdbd.conf.j2') }}"
     dest: /etc/slurm/slurmdbd.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0600
   when: not slurm_config_git_repo is defined
   notify: Restart slurmdbd service

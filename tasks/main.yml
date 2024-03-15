@@ -44,23 +44,15 @@
           {% endfor %}
 
 
-- name: Update apt cache on Debian/Ubuntu systems
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 600
-  when:
-    - ansible_os_family == 'Debian'
-    - slurm_update_apt_cache
-  changed_when: false
-
 - name: Download slurm config from git if "slurm_config_git_repo" is defined
   when: slurm_config_git_repo is defined
   block:
 
     - name: Install git
-      ansible.builtin.package:
+      ansible.builtin.apt:
         name: git
         state: present
+        cache_valid_time: 600
 
     - name: Deploy slurm config file from a git repo
       ansible.builtin.git:
@@ -72,37 +64,11 @@
       environment:
         GIT_SSL_NO_VERIFY: "True"
 
-- name: Install EPEL repository
-  ansible.builtin.yum:
-    name: epel-release
-    state: installed
-  when:
-    - slurm_add_epel_repo | bool
-    - ansible_os_family == "RedHat"
-
-- name: Install OpenHPC repositories (RHEL7)
-  ansible.builtin.yum:
-    name: "{{ slurm_ohpc_repos_url['rhel7'] }}"
-    state: installed
-  when:
-    - slurm_add_openhpc_repo | bool
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == "7"
-
-- name: Install OpenHPC repositories (RHEL8)
-  ansible.builtin.yum:
-    name: "{{ slurm_ohpc_repos_url['rhel8'] }}"
-    state: installed
-    disable_gpg_check: true
-  when:
-    - slurm_add_openhpc_repo | bool
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == "8"
-
 - name: Install common Slurm packages
-  ansible.builtin.package:
-    name: "{{ slurm_packages_common[ansible_os_family] }}"
+  ansible.builtin.apt:
+    name: "{{ slurm_packages_common }}"
     state: present
+    cache_valid_time: 600
   tags: munge
 
 - name: Generate a Munge key for the cluster in the slurm-master host

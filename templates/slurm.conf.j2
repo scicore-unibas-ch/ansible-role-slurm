@@ -10,7 +10,6 @@ ControlMachine={{ slurm_master_host }}
 ## scheduler settings
 #
 SchedulerType=sched/backfill
-SchedulerPort=7321
 SelectType=select/cons_res
 SelectTypeParameters=CR_LLN,CR_Core_Memory
 
@@ -87,7 +86,7 @@ JobAcctGatherFrequency=60
 ## job execution settings
 #
 
-CheckpointType=checkpoint/none
+#CheckpointType=checkpoint/none
 #CheckpointType=checkpoint/blcr
 #JobCheckpointDir=/var/lib/slurm/checkpoint
 
@@ -152,12 +151,7 @@ Waittime=0
 #ControlAddr=10.1.1.156
 
 SlurmUser={{ slurm_user[ansible_os_family] }}
-{% if ansible_os_family == "RedHat" %}
-SlurmctldPidFile=/var/run/slurmctld.pid
-{% endif %}
-{% if ansible_os_family == "Debian" %}
 SlurmctldPidFile=/run/slurmctld.pid
-{% endif %}
 SlurmctldPort=6817
 SlurmctldTimeout=300
 
@@ -173,12 +167,7 @@ DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
 ## `slurmd` settings (compute nodes)
 #
 SlurmdPort=6818
-{% if ansible_os_family == "RedHat" %}
-SlurmdPidFile=/var/run/slurmd.pid
-{% endif %}
-{% if ansible_os_family == "Debian" %}
 SlurmdPidFile=/run/slurmd.pid
-{% endif %}
 SlurmdSpoolDir={{ slurm_slurmd_spool_path | default('/var/spool/slurm') }}
 SlurmdTimeout=300
 

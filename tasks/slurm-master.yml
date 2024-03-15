@@ -1,42 +1,16 @@
 ---
 
 - name: Install slurm master packages
-  ansible.builtin.package:
-    name: "{{ slurm_packages_master[ansible_os_family] }}"
+  ansible.builtin.apt:
+    name: "{{ slurm_packages_master }}"
     state: present
-
-- name: Create /etc/slurm in RedHat based systems
-  ansible.builtin.file:
-    path: /etc/slurm
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  when: ansible_os_family == "RedHat"
-
-- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /etc/slurm-llnl
-    dest: /etc/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
-
-- name: Make a symlink /var/log/slurm >> /var/log/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /var/log/slurm-llnl
-    dest: /var/log/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
+    cache_valid_time: 600
 
 - name: Ensure the slurmctld spool directory exists
   ansible.builtin.file:
     path: "{{ slurm_slurmctld_spool_path | default('/var/spool/slurmctld') }}"
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0755
     state: directory
 
@@ -44,8 +18,8 @@
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0644
   when: not slurm_config_git_repo is defined
   notify: Restart slurm services
@@ -54,8 +28,8 @@
   ansible.builtin.template:
     src: "{{ slurm_lua_submit_plugin_custom_template | default('job_submit.lua.j2') }}"
     dest: /etc/slurm/job_submit.lua
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0755
   when:
     - slurm_config_deploy_lua_submit_plugin | bool

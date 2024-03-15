@@ -19,17 +19,12 @@ AuthType=auth/munge
 DbdAddr=localhost
 DbdHost=localhost
 DbdPort=6819
-SlurmUser={{ slurm_user[ansible_os_family] }}
+SlurmUser={{ slurm_user }}
 #MessageTimeout=300
 DebugLevel=4
 #DefaultQOS=normal,standby
 LogFile=/var/log/slurm/slurmdbd.log
-{% if ansible_os_family == "RedHat" %}
-PidFile=/var/run/slurmdbd.pid
-{% endif %}
-{% if ansible_os_family == "Debian" %}
 PidFile=/run/slurmdbd.pid
-{% endif %}
 #PluginDir=/usr/lib/slurm
 #PrivateData=accounts,users,usage,jobs
 #TrackWCKey=yes
