@@ -12,6 +12,7 @@
       - libcgroup1
       - cgroup-tools
     state: present
+    cache_valid_time: 600
 
 - name: Deploy /etc/slurm/cgroup.conf
   ansible.builtin.template:
@@ -63,6 +64,25 @@
     - /etc/slurm
     - /etc/slurm-llnl
   when: slurm_configless | bool
+
+- name: Deploy /etc/systemd/system/slurmd.service.d/override.conf with our customizations
+  block:
+
+    - name: Create folder /etc/systemd/system/slurmd.service.d/
+      ansible.builtin.file:
+        path: /etc/systemd/system/slurmd.service.d/
+        owner: root
+        group: root
+        state: directory
+        mode: 0755
+
+    - name: Deploy /etc/systemd/system/slurmd.service.d/override.conf
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/slurmd.service.d/override.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: "{{ slurm_slurmd_systemd_override }}"
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:

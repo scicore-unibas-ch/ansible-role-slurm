@@ -60,7 +60,6 @@ slurm_slurmdbd_mysql_password: aadAD432saAdfaoiu
 
 # slurm user and group which runs the slurm daemons
 slurm_user: "slurm"
-
 slurm_group: "slurm"
 
 # slurm packages we install in every cluster member
@@ -83,3 +82,8 @@ slurm_packages_worker:
 # Set to true when using slurm cloud scheduling without neutron internal dns
 # check templates/slurm.conf.j2.cloud.example for details on what this var is doing
 slurm_openstack_cloud_reg_addrs: false
+
+slurm_slurmd_systemd_override: |
+  [Unit]
+  #After=munge.service network-online.target remote-fs.target sssd.service
+  ConditionPathExists=
