@@ -8,14 +8,14 @@
 
 # general
 CgroupMountpoint=/sys/fs/cgroup
-CgroupAutomount=yes
+#CgroupAutomount=yes
 
 # task/cgroup plugin
-TaskAffinity=no  # as recommended in https://slurm.schedmd.com/cgroup.conf.html
+#TaskAffinity=no  # as recommended in https://slurm.schedmd.com/cgroup.conf.html
 ConstrainCores=yes
 ConstrainRAMSpace=yes
 ConstrainSwapSpace=yes
-ConstrainKmemSpace=no
+#ConstrainKmemSpace=no
 
 # prevent jobs from using swap space
 AllowedRAMSpace=99  # in %
