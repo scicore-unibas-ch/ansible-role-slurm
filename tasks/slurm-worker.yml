@@ -85,6 +85,9 @@
         content: "{{ slurm_slurmd_systemd_override }}"
       notify: Restart systemd
 
+    - name: Flush handlers so systemd-daemon is reloaded
+      ansible.builtin.meta: flush_handlers
+
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:
     name: slurmd
