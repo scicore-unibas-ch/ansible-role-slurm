@@ -3,6 +3,10 @@ require = os
 require = string
 
 function slurm_job_submit(job_desc, part_list, submit_uid)
+    -- when upgrading to slurm 23.11 submit_uid is no longer an int but a float
+    -- so we use math.floor() to convert it to int
+    submit_uid = math.floor(submit_uid)
+
     local getent_answer, username, rc
     f = io.popen("getent passwd " .. submit_uid .. "| awk -F ':' {'print $1'}")
     getent_answer = f:read()
