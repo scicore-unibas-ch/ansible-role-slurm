@@ -43,6 +43,31 @@
           {{ hostvars[node]['ansible_default_ipv4']['address'] }}  {{ node }}
           {% endfor %}
 
+- name: Create local slurm user and logs folder
+  block:
+  when: slurm_create_local_account_and_group
+
+    # gid is aligned with the gid used by slurm packages in official apt repos
+    - name: Add local user group slurm
+      ansible.builtin.group:
+        name: "{{ slurm_group }}"
+        gid: 64030
+
+    # uid is aligned with the uid used by slurm packages in official apt repos
+    - name: Add local user account slurm
+      ansible.builtin.user:
+        name: "{{ slurm_user }}"
+        uid: 64030
+        group: "{{ slurm_group }}"
+
+    - name: Create the slurm logs folder
+      ansible.builtin.file:
+        path: /var/log/slurm
+        owner: "{{ slurm_user }}"
+        group: "{{ slurm_group }}"
+        mode: 0755
+        state: directory
+
 
 - name: Download slurm config from git if "slurm_config_git_repo" is defined
   when: slurm_config_git_repo is defined
