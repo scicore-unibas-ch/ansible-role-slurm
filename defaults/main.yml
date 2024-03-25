@@ -65,6 +65,7 @@ slurm_group: "slurm"
 # slurm packages we install in every cluster member
 slurm_packages_common:
   - slurm-client
+  - libpmix2
 
 # slurm packages we install only in master node
 slurm_packages_master:
