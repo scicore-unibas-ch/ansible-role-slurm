@@ -8,6 +8,11 @@ slurm_update_etc_hosts_file: true
 # point this var to a git repo if you have your slurm config in git
 # slurm_config_git_repo: ""
 
+# if you build your own deb packages from the official slurm tarbal you need to create a local acocunt for slurm
+# if you use the slurm package from official ubuntu repos you can set this to false because the slurm user is
+# created by the package installation
+slurm_create_local_account_and_group: true
+
 # by default the role will deploy a lua submit plugin which will automatically add the users to the slurm accounting db
 # Check "templates/job_submit.lua.j2" for details
 slurm_config_deploy_lua_submit_plugin: true
@@ -17,7 +22,7 @@ slurm_config_deploy_lua_submit_plugin: true
 # Only tested on RedHat systems but it should work on Ubuntu too if you install ubuntu20.02 or higher
 slurm_configless: false
 
-slurm_mysqld_custom_config: |
+slurm_mariadb_custom_config: |
   [mysqld]
   innodb_buffer_pool_size=4096M
   innodb_log_file_size=64M
