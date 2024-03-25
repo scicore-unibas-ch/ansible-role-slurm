@@ -83,6 +83,7 @@
         group: root
         mode: "0644"
         content: "{{ slurm_slurmd_systemd_override }}"
+      notify: Restart systemd
 
 - name: Start and enable slurm worker daemon
   ansible.builtin.service:

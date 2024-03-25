@@ -25,3 +25,7 @@
     name: slurmd
     state: restarted
   when: "slurm_workers_group in group_names"
+
+- name: Restart systemd
+  ansible.builtin.command:
+    cmd: systemctl daemon-reload
