@@ -15,6 +15,15 @@
   when: not slurm_config_git_repo is defined
   notify: Restart slurm services
 
+- name: Deploy custom config for mysql/mariadb server
+  ansible.builtin.copy:
+    dest: /etc/mysql/conf.d/mysqld.cnf
+    owner: root
+    group: root
+    mode: 0644
+    content: "{{ slurm_mariadb_custom_config }}"
+  notify: Restart mariadb
+
 - name: Enable and start mariadb server
   ansible.builtin.service:
     name: mariadb

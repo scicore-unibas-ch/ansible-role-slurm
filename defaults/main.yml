@@ -17,6 +17,13 @@ slurm_config_deploy_lua_submit_plugin: true
 # Only tested on RedHat systems but it should work on Ubuntu too if you install ubuntu20.02 or higher
 slurm_configless: false
 
+slurm_mysqld_custom_config: |
+  [mysqld]
+  innodb_buffer_pool_size=4096M
+  innodb_log_file_size=64M
+  innodb_lock_wait_timeout=900
+  max_allowed_packet=16M
+
 # Deploy required scripts in slurm master for cloud scheduling using openstack (https://slurm.schedmd.com/elastic_computing.html)
 # This will deploy "ResumeProgram", "SuspendProgram" for slurm.conf
 # and /etc/openstack/clouds.yaml with an application credential in the slurm master
