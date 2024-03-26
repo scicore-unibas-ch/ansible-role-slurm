@@ -18,9 +18,12 @@ function slurm_job_submit(job_desc, part_list, submit_uid)
     username = getent_answer
     f = io.popen("sacctmgr show -n user " .. username)
     if not f:read() then
+	-- in centos7 rc was an int but in ubuntu22.04 it is a boolean
         rc = os.execute("sacctmgr add -i user " .. username ..
                         " DefaultAccount=root")
-        if rc ~= 0 then
+	-- if the command was successful rc is true
+        -- if rc ~= 0 then
+        if not rc then
             slurm.log_error("could not add user " .. username)
             return slurm.FAILURE
         end
