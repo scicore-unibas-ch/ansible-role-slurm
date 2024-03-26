@@ -44,8 +44,8 @@
           {% endfor %}
 
 - name: Create local slurm user and logs folder
-  block:
   when: slurm_create_local_account_and_group
+  block:
 
     # gid is aligned with the gid used by slurm packages in official apt repos
     - name: Add local user group slurm
