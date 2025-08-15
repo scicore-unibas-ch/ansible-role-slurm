@@ -122,6 +122,14 @@ def main():
             sec_groups_list.append({'name': sec_group_details.name})
         os_parameters['security_groups'] = sec_groups_list
 
+        # Safety check for duped (running orphaned servers) to delete the old before spawning a new one
+
+        # This function will delete the node we want to spin up if still up, only happens
+        # in cases where slurmctld could not update the state files in /var/spool/slurm in general,
+        # but in any case if slurm wants to start the node it means it does not contain any job so we can
+        # safely delete the old instance here and let it spawn it again below
+        clean_orphaned_server(conn,node)
+
         if debug:
             logger.info(f"os_parameters for {node} : {os_parameters}")
         if not debug:
@@ -129,9 +137,22 @@ def main():
             server = create_server(conn, node, **os_parameters)
             with open(os.path.join(statedir, node), 'w') as f:
                 f.write(server.id)
-            # updating the node ip using scontrol is not needed when using "SlurmctldParameters=cloud_reg_addrs"
-            #scontrol = subprocess.run(['scontrol', 'update', 'nodename=' + node, 'nodeaddr=' + server_ip], stdout=subprocess.PIPE, universal_newlines=True)
-            # Don't need scontrol update nodename={node} nodeaddr={server_ip} when using SlurmctldParameters=cloud_dns
+
+def get_current_servers(conn):
+    serverlist = []
+    for i in conn.list_servers():
+        serverlist.append(i.to_dict())
+    return serverlist
+
+# openstack connection plus the node to clean
+def clean_orphaned_server(conn,node):
+    for server in get_current_servers(conn):
+        if server['name'] == node:
+            logger.error(f"{node} is already running! DELETING ORPHANED SERVER")
+            try:
+                conn.compute.delete_server(server['id'])
+            except Exception as e:
+                logger.error(f"Error deleting server: {e}")
 
 def get_statesavelocation():
     """ Return the path for Slurm's StateSaveLocation """
