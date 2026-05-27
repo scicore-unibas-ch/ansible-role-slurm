@@ -24,7 +24,7 @@
 
     If a file with the nodename exists in the Slurm control daemons spool directory [2] then the OpenStack ID is read from it and used to select the instance to delete.
     Otherwise, this will attempt to delete the instance by name which requires that the name is unique.
-    
+
     OpenStack credentials must be available to this script (e.g. via an application credential in /etc/openstack/clouds.yaml readable by the slurm user)
 
     Output and exceptions are written to the syslog.
@@ -61,15 +61,18 @@ def main():
         instance_id = False
         statedir = get_statesavelocation()
         instance_file = os.path.join(statedir, node)
+        logger.info(f"Instance file to check is {instance_file}")
         try:
             with open(instance_file) as f:
                 instance_id = f.readline().strip()
+                logger.info(f"Deleting node {node} with ID {instance_id}")
+                delete_server(conn, (instance_id or node))
         except FileNotFoundError:
-            logger.info(f"no instance file found in {statedir} for node {node}")
+            logger.info(f"No instance file {instance_file} found in {statedir} for node {node}")
+            logger.info(f"Will clear orphaned node={node} due to missing state file")
+            clean_orphaned_server(conn,node)
 
         #logger.info(f"deleting node {instance_id or node}")
-        logger.info(f"Deleting node {node} with ID {instance_id}")
-        delete_server(conn, (instance_id or node))
         # updating the node ip using scontrol is not needed when using "SlurmctldParameters=cloud_reg_addrs"
         #scontrol = subprocess.run(['scontrol', 'update', 'nodename=' + node, 'nodeaddr=' + node], stdout=subprocess.PIPE, universal_newlines=True)
 
@@ -96,6 +99,22 @@ def delete_server(conn, name):
         conn.compute.delete_server(server)
     except Exception as e:
         logger.error(f"Error deleting server: {e}")
+
+def get_current_servers(conn):
+    serverlist = []
+    for i in conn.list_servers():
+        serverlist.append(i.to_dict())
+    return serverlist
+
+# openstack connection plus the node to clean
+def clean_orphaned_server(conn,node):
+    for server in get_current_servers(conn):
+        if server['name'] == node:
+            logger.error(f"DELETING ORPHANED SERVER {node} with id {server['id']}")
+            try:
+                conn.compute.delete_server(server['id'])
+            except Exception as e:
+                logger.error(f"Error deleting server: {e}")
 
 if __name__ == '__main__':
     main()

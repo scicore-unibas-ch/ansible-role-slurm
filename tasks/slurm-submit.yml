@@ -1,28 +1,10 @@
 ---
 
-- name: Create /etc/slurm in RedHat based systems
-  ansible.builtin.file:
-    path: /etc/slurm
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  when: ansible_os_family == "RedHat"
-
-- name: Make a symlink /etc/slurm >> /etc/slurm-llnl on Debian based systems
-  ansible.builtin.file:
-    src: /etc/slurm-llnl
-    dest: /etc/slurm
-    owner: root
-    group: root
-    state: link
-  when: ansible_os_family == "Debian"
-
 - name: Deploy /etc/slurm/slurm.conf
   ansible.builtin.template:
     src: "{{ slurm_conf_custom_template | default('slurm.conf.j2') }}"
     dest: /etc/slurm/slurm.conf
-    owner: "{{ slurm_user[ansible_os_family] }}"
-    group: "{{ slurm_group[ansible_os_family] }}"
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
     mode: 0644
   when: not slurm_config_git_repo is defined
