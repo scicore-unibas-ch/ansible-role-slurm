@@ -9,7 +9,7 @@
 - name: Install cgroups if this is a worker host
   ansible.builtin.apt:
     name:
-      - libcgroup1
+      - libcgroup2
       - cgroup-tools
     state: present
     cache_valid_time: 600
